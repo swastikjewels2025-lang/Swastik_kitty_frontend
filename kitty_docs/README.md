@@ -61,6 +61,9 @@ kitty_docs/
 │   └── FRONTEND_SECURITY.md                  # Secure storage, PII handling, HTTPS, logging
 │
 ├── planning/
+│   ├── FRONTEND_IMPLEMENTATION_PLAN.md       # Master 21-phase execution plan & dependency graph
+│   ├── FRONTEND_PHASE_CHECKLIST.md           # Milestone checklist for every implementation phase
+│   ├── FRONTEND_IMPLEMENTATION_STATUS.md     # Living status tracking log (initially NOT STARTED)
 │   ├── FRONTEND_DEVELOPMENT_ROADMAP.md       # 10-phase development plan from setup to release
 │   ├── REQUIREMENTS_TRACEABILITY.md          # 40-item requirements traceability matrix
 │   ├── MOCK_API_STRATEGY.md                  # Mock repository swapping & 5 testing scenarios
