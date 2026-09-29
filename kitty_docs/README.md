@@ -19,6 +19,13 @@ This project represents the complete frontend specification, system flow, design
 
 ---
 
+> [!NOTE]
+> **Active Implementation Blueprint & Readiness Status:**
+> - [Implementation Readiness Report](Implementation_Readiness_Report.md) (`Implementation_Readiness_Report.md`)
+> - [Phase-Wise Implementation Plan](07_Phases/KITTY_APP_PHASE_WISE_IMPLEMENTATION_PLAN.md) (`07_Phases/KITTY_APP_PHASE_WISE_IMPLEMENTATION_PLAN.md`)
+> - [UX Redesign Audit](09_Audits/Kitty_App_Complete_UX_Navigation_User_Experience_Redesign_Audit.md) (`09_Audits/Kitty_App_Complete_UX_Navigation_User_Experience_Redesign_Audit.md`)
+> - [Documentation Consolidation Report](Documentation_Consolidation_Report.md) (`Documentation_Consolidation_Report.md`)
+
 ## 2. Documentation Map (`kitty_docs/`)
 
 All architecture, product requirements, API specifications, and design decisions are organized in `kitty_docs/`:
@@ -80,7 +87,9 @@ kitty_docs/
 
 The comprehensive V2 redesign, Kitty-first simplification architecture, and backend preparation specifications are located in kitty_docs/:
 
-* **Master Documentation Index**: [KITTY_DOCS_INDEX_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_DOCS_INDEX_V2.md)
+* **Master Documentation Index**: [KITTY_DOCS_INDEX_V2.md](file:///D:/kitty_frontend/kitty_docs/99_Archive/KITTY_DOCS_INDEX_V2.md)
+* **Documentation Consolidation Report**: [Documentation_Consolidation_Report.md](file:///D:/kitty_frontend/kitty_docs/Documentation_Consolidation_Report.md)
+* **Complete UX & Redesign Audit**: [Kitty_App_Complete_UX_Navigation_User_Experience_Redesign_Audit.md](file:///D:/kitty_frontend/kitty_docs/09_Audits/Kitty_App_Complete_UX_Navigation_User_Experience_Redesign_Audit.md)
 * **Product Specification**: [KITTY_APP_PRODUCT_SPEC_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_APP_PRODUCT_SPEC_V2.md)
 * **Information Architecture**: [INFORMATION_ARCHITECTURE_V2.md](file:///D:/kitty_frontend/kitty_docs/INFORMATION_ARCHITECTURE_V2.md)
 * **End-to-End User Flows**: [KITTY_USER_FLOWS_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_USER_FLOWS_V2.md)
