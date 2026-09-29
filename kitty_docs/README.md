@@ -76,6 +76,30 @@ kitty_docs/
 
 ---
 
+### 2.1 V2 Redesign & Backend Preparation Specifications Suite
+
+The comprehensive V2 redesign, Kitty-first simplification architecture, and backend preparation specifications are located in kitty_docs/:
+
+* **Master Documentation Index**: [KITTY_DOCS_INDEX_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_DOCS_INDEX_V2.md)
+* **Product Specification**: [KITTY_APP_PRODUCT_SPEC_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_APP_PRODUCT_SPEC_V2.md)
+* **Information Architecture**: [INFORMATION_ARCHITECTURE_V2.md](file:///D:/kitty_frontend/kitty_docs/INFORMATION_ARCHITECTURE_V2.md)
+* **End-to-End User Flows**: [KITTY_USER_FLOWS_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_USER_FLOWS_V2.md)
+* **Backend Change Requirements**: [BACKEND_CHANGE_REQUIREMENTS_V2.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_CHANGE_REQUIREMENTS_V2.md)
+* **Kitty Number Booking Spec**: [BACKEND_KITTY_NUMBER_BOOKING_SPEC_V1.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_KITTY_NUMBER_BOOKING_SPEC_V1.md)
+* **Future Kitty Reservation Spec**: [BACKEND_FUTURE_KITTY_RESERVATION_SPEC_V1.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_FUTURE_KITTY_RESERVATION_SPEC_V1.md)
+* **Multi-Month Advance Payment Spec**: [BACKEND_MULTI_MONTH_PAYMENT_SPEC_V1.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_MULTI_MONTH_PAYMENT_SPEC_V1.md)
+* **Full Kitty Settlement Spec**: [BACKEND_FULL_KITTY_PAYMENT_SPEC_V1.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_FULL_KITTY_PAYMENT_SPEC_V1.md)
+* **Multi-Kitty Management Spec**: [BACKEND_MULTI_KITTY_SPEC_V1.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_MULTI_KITTY_SPEC_V1.md)
+* **Payment Architecture Contract**: [PAYMENT_CONTRACT_V2.md](file:///D:/kitty_frontend/kitty_docs/PAYMENT_CONTRACT_V2.md)
+* **Master API Contract (V2)**: [KITTY_API_CONTRACT_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_API_CONTRACT_V2.md)
+* **Database & MongoDB Schema Changes**: [BACKEND_DATABASE_CHANGES_V2.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_DATABASE_CHANGES_V2.md)
+* **Pending Business Decisions Checklist**: [KITTY_BUSINESS_RULES_PENDING_V1.md](file:///D:/kitty_frontend/kitty_docs/KITTY_BUSINESS_RULES_PENDING_V1.md)
+* **Frontend/Backend Dependency Matrix**: [FRONTEND_BACKEND_DEPENDENCY_MATRIX_V2.md](file:///D:/kitty_frontend/kitty_docs/FRONTEND_BACKEND_DEPENDENCY_MATRIX_V2.md)
+* **Backend Developer Implementation Manual & Handoff**: [BACKEND_DEVELOPER_HANDOFF_V2.md](file:///D:/kitty_frontend/kitty_docs/BACKEND_DEVELOPER_HANDOFF_V2.md)
+* **Master Implementation Plan & Roadmap**: [KITTY_APP_IMPLEMENTATION_PLAN_V2.md](file:///D:/kitty_frontend/kitty_docs/KITTY_APP_IMPLEMENTATION_PLAN_V2.md)
+
+---
+
 ## 3. Technology Stack & Framework Choices
 
 * **Target Mobile Application:** **Flutter** (Dart) for native iOS and Android deployment.
