@@ -1,112 +1,75 @@
 # Master API Contract & HTTP Specification
 
-> [!IMPORTANT]
-> **DEFINITIVE CONTRACT SPECIFICATION:**  
-> The definitive version of this contract is formalized in:
-> * [BACKEND_CONTRACT_FREEZE.md](file:///d:/ui%20design/kitty_docs/api/BACKEND_CONTRACT_FREEZE.md) — Master Frontend ↔ Backend Contract Freeze
-> * [BACKEND_DEVELOPER_IMPLEMENTATION_GUIDE.md](file:///d:/ui%20design/kitty_docs/api/BACKEND_DEVELOPER_IMPLEMENTATION_GUIDE.md) — Backend Implementation Guide & To-Do Checklist
-
-## 1. Status & Engineering Notice
-* **Document Status:** **`PROPOSED CONTRACT — BACKEND DEVELOPER MUST CONFIRM`**
-* **Target Backend Architecture:** Node.js + Express REST API with MongoDB
-* **API Base URL Path:** `/api/v1`
+**Project**: Swastik Jewellers Kitty Savings App  
+**API Base URL**: `/api/v1`  
+**Protocol**: HTTPS REST JSON / Multipart Form-Data  
+**Target Backend**: `D:\Kitty_backend\Swastik_kitty_backend\`  
+**Target Mobile Client**: `D:\kitty_app\`  
+**Status**: Authoritative Master API Contract  
 
 ---
 
-## 2. Standard Response & Error Envelopes
+## 1. Global Standards & Protocols
 
-Every API response dispatched by the backend must conform to one of two envelopes:
+### 1.1 Response Envelopes
+All responses returned by the backend MUST adhere strictly to one of the following two standard JSON envelopes:
 
-### 2.1 Standard Success Envelope
+#### Success Envelope
 ```json
 {
   "success": true,
-  "message": "Operation completed successfully.",
-  "data": {},
-  "meta": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "hasNext": true
-  }
+  "message": "Human readable success explanation.",
+  "data": {}
 }
 ```
-* Note: `meta` is optional and only included for paginated endpoints.
 
-### 2.2 Standard Error Envelope
+#### Error Envelope
 ```json
 {
   "success": false,
-  "message": "Human-readable user-friendly error message.",
+  "message": "Human readable user-friendly error explanation.",
   "error": {
-    "code": "INVALID_OTP",
-    "details": {
-      "field": "otp",
-      "attemptRemaining": 2
-    }
+    "code": "ERROR_CODE_STRING",
+    "details": {}
   }
 }
 ```
 
----
+### 1.2 HTTP Headers
+* **Client Request Headers**:
+  * `Content-Type: application/json` (or `multipart/form-data` for KYC file upload)
+  * `Accept: application/json`
+  * `Authorization: Bearer <TOKEN>` (on all protected endpoints)
+* **Webhook Headers**:
+  * `x-gokwik-signature: <HMAC_SHA256_HEX>`
 
-## 3. HTTP Status Code Contract
-
-| HTTP Status | Meaning | Backend Responsibility | Frontend Action |
-| :--- | :--- | :--- | :--- |
-| **`200 OK`** | Request succeeded. | Returns requested data inside `data` envelope. | Deserializes DTO, maps to Domain Entity, renders UI. |
-| **`201 Created`** | Resource created. | Returns new entity (e.g. membership record). | Displays success feedback / routes to next step. |
-| **`204 No Content`** | Success with no body. | Dispatched on deletions or acknowledgement. | Triggers success toast, no deserialization. |
-| **`400 Bad Request`** | Syntactic / Form error. | Returns validation reason in `message` and `error`.| Highlights input field with red border and error text. |
-| **`401 Unauthorized`** | Token invalid / expired. | Returns 401 when Bearer token fails verification. | Clears SecureStorage, displays toast, redirects to `/auth/login`. |
-| **`403 Forbidden`** | Action not allowed. | Dispatched if user lacks required permission/KYC. | Displays compliance bottom sheet / routes to `/kyc`. |
-| **`404 Not Found`** | Resource does not exist. | Returns 404 for missing IDs or routes. | Displays reusable `EmptyStateCard` or 404 message. |
-| **`409 Conflict`** | Resource state clash. | Duplicate phone number registration, double pay. | Displays conflict banner with resolution advice. |
-| **`422 Unprocessable`** | Semantic validation error. | Input valid JSON but violates domain rules. | Displays specific field validation errors. |
-| **`429 Rate Limited`** | Too many requests. | Dispatched when SMS OTP rate limit reached. | Disables action button, displays countdown warning. |
-| **`500 Server Error`** | Unhandled crash. | Logs server error stack internally. | Displays error card with "Retry" button. |
-| **`502 Bad Gateway`** | Reverse proxy failure. | NGINX unable to reach Node process. | Displays server maintenance notice. |
-| **`503 Unavailable`** | System maintenance. | Server temporarily down or deploying. | Displays maintenance screen with auto-retry. |
+### 1.3 Data Formatting Standards
+* **Timestamps**: Strict ISO-8601 UTC strings (`2026-10-07T12:00:00.000Z`).
+* **Currencies**: INR amounts formatted as numbers or integer paise/rupees as documented per endpoint.
+* **Weights**: Gold grams formatted to 3 decimal places (e.g. `12.500`).
 
 ---
 
-## 4. Authentication Contract
-
-### 4.1 Frontend Responsibility
-* Render mobile phone number and 6-digit OTP UI inputs.
-* Submit phone and OTP to backend.
-* Store received JWT token securely using `FlutterSecureStorage` (KeyStore / Keychain).
-* Inject `Authorization: Bearer <token>` into every protected HTTP request header.
-* Intercept HTTP 401 to wipe local session storage and route to Login.
-* Provide clean logout UI and delete cached credentials on exit.
-
-### 4.2 Backend Responsibility
-* Generate 6-digit cryptographic OTP and manage 5-minute expiry in Redis/memory.
-* Dispatch SMS via Twilio or MSG91.
-* Verify OTP and issue signed JWT token with appropriate expiry.
-* Validate JWT signature and claims on all protected routes (`/api/v1/users/*`, `/api/v1/memberships/*`, `/api/v1/payments/*`).
-* Revoke/blacklist tokens upon logout if stateful sessions are enabled.
+## 2. Complete Endpoint Catalog
 
 ---
 
-## 5. Detailed Endpoint Contracts
-
-### 5.1 Auth: Dispatch Mobile OTP
-* **Feature:** Authentication
-* **API Name:** `sendOtp`
-* **Purpose:** Sends 6-digit OTP to user's phone via SMS.
-* **HTTP Method:** `POST`
-* **Endpoint:** `/api/v1/auth/send-otp`
-* **Authentication:** None (Public)
-* **Required Headers:** `Content-Type: application/json`
-* **Request:**
+### [AUTH-01] Send Mobile OTP
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/auth/send-otp`
+* **Auth Required**: No (Public)
+* **Request Headers**: `Content-Type: application/json`
+* **Request Body**:
   ```json
   {
     "phone": "+919876543210"
   }
   ```
-* **Success Status:** `200 OK`
-* **Response:**
+* **Validation**:
+  * `phone`: Required, valid Indian E.164 phone string starting with `+91` followed by 10 digits (`^\+91[6-9]\d{9}$`).
+* **Rate Limiting**: Maximum 3 OTP requests per 15 minutes, minimum 60-second cooldown between requests.
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
@@ -117,36 +80,35 @@ Every API response dispatched by the backend must conform to one of two envelope
     }
   }
   ```
-* **Error Statuses:** `400 Bad Request`, `429 Too Many Requests`, `500 Server Error`
-* **Error Response:**
-  ```json
-  {
-    "success": false,
-    "message": "Too many requests. Please wait 2 minutes.",
-    "error": { "code": "RATE_LIMIT_EXCEEDED" }
-  }
-  ```
-* **Pagination / Sorting / Filtering:** N/A
+* **Error Responses**:
+  * `400 Bad Request`: `{"success": false, "message": "Invalid phone number format...", "error": {"code": "VALIDATION_ERROR", "details": {"field": "phone"}}}`
+  * `429 Too Many Requests`: `{"success": false, "message": "Please wait 45 seconds before requesting a new OTP.", "error": {"code": "RATE_LIMIT_EXCEEDED"}}`
+* **Frontend Usage**: `lib/features/auth/presentation/screens/login_screen.dart` (Phone number input step).
 
 ---
 
-### 5.2 Auth: Verify Mobile OTP
-* **Feature:** Authentication
-* **API Name:** `verifyOtp`
-* **Purpose:** Validates 6-digit OTP and returns signed JWT with user profile.
-* **HTTP Method:** `POST`
-* **Endpoint:** `/api/v1/auth/verify-otp`
-* **Authentication:** None (Public)
-* **Required Headers:** `Content-Type: application/json`
-* **Request:**
+### [AUTH-02] Verify Mobile OTP & Issue Session
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/auth/verify-otp`
+* **Auth Required**: No (Public)
+* **Request Headers**: `Content-Type: application/json`
+* **Request Body**:
   ```json
   {
     "phone": "+919876543210",
     "otp": "123456"
   }
   ```
-* **Success Status:** `200 OK`
-* **Response:**
+* **Validation**:
+  * `phone`: Required Indian E.164 string.
+  * `otp`: Required 6-digit numeric string.
+* **Behavior**:
+  * Verifies against cached OTP (valid for 300s, max 3 attempts).
+  * Automatically creates user if new (`role: 'CUSTOMER'`).
+  * Issues signed JWT Bearer token (30-day validity).
+  * Test bypass: Phone `+919876543210` with OTP `123456` always passes.
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
@@ -155,80 +117,157 @@ Every API response dispatched by the backend must conform to one of two envelope
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
       "isNewUser": false,
       "user": {
-        "id": "usr_654321abcdef",
-        "name": "Rihan",
+        "id": "67039a48b71d4a001234abcd",
+        "name": "Rihan Saifi",
         "phone": "+919876543210",
         "role": "CUSTOMER",
-        "tier": "Tier 1 Verified Member",
+        "tier": "Standard Member",
         "kyc": {
           "isVerified": true,
           "documentType": "AADHAAR",
-          "documentNumberMasked": "XXXX XXXX 9012",
-          "documentUrl": "https://res.cloudinary.com/swastik/image/upload/kyc/sample.jpg",
+          "documentNumberMasked": "XXXX XXXX 3210",
+          "documentUrl": "https://res.cloudinary.com/swastik/image/upload/kyc/kyc-123456.jpg",
           "status": "VERIFIED"
         }
       }
     }
   }
   ```
-* **Error Statuses:** `400 Bad Request` (Invalid/Expired OTP)
-* **Error Response:**
-  ```json
-  {
-    "success": false,
-    "message": "Incorrect OTP entered. Please try again.",
-    "error": { "code": "INVALID_OTP" }
-  }
-  ```
-* **Pagination / Sorting / Filtering:** N/A
+* **Error Responses**:
+  * `400 Bad Request`: `INVALID_OTP` (with `attemptsRemaining`) or `OTP_EXPIRED`.
+* **Frontend Usage**: `lib/features/auth/presentation/screens/login_screen.dart` (OTP verification step).
 
 ---
 
-### 5.3 KYC: Submit Identity Document
-* **Feature:** Statutory Compliance
-* **API Name:** `submitKyc`
-* **Purpose:** Uploads identity document to Cloudinary and saves KYC record.
-* **HTTP Method:** `POST`
-* **Endpoint:** `/api/v1/users/kyc`
-* **Authentication:** Required (`Bearer <token>`)
-* **Required Headers:** `Content-Type: multipart/form-data`
-* **Request (Form-Data):**
-  - `documentType`: String (`AADHAAR` | `PAN`)
-  - `documentNumber`: String (`123456789012` | `ABCDE1234F`)
-  - `consentAgreed`: Boolean (`true`)
-  - `file`: Binary File (JPG/PNG/PDF, Max 10MB)
-* **Success Status:** `200 OK` / `201 Created`
-* **Response:**
+### [AUTH-03] Google Sign-In Exchange
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/auth/google`
+* **Auth Required**: No (Public)
+* **Request Headers**: `Content-Type: application/json`
+* **Request Body**:
+  ```json
+  {
+    "idToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6Ij...",
+    "email": "patron@gmail.com",
+    "name": "Rihan Saifi"
+  }
+  ```
+* **Validation**: Valid Google OAuth2 ID Token verified via `google-auth-library` server-side.
+* **Expected Response (`200 OK`)**: Same session envelope as `verify-otp`.
+* **Frontend Usage**: `lib/features/auth/presentation/screens/login_screen.dart` (Google button).
+
+---
+
+### [AUTH-04] Patron Sign Out
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/auth/logout`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Request Body**: None (`{}`)
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
-    "message": "KYC submitted successfully.",
-    "data": {
-      "referenceId": "KYC-849201",
-      "status": "PENDING",
-      "documentType": "AADHAAR",
-      "documentNumberMasked": "XXXX XXXX 9012",
-      "documentUrl": "https://res.cloudinary.com/swastik/image/upload/kyc/sample.jpg"
-    }
+    "message": "Logged out successfully.",
+    "data": {}
   }
   ```
-* **Error Statuses:** `400 Bad Request` (Invalid format/size), `401 Unauthorized`
-* **Pagination / Sorting / Filtering:** N/A
+* **Frontend Usage**: `lib/features/menu/presentation/widgets/kitty_menu_sheet.dart`, `lib/features/settings/presentation/screens/settings_screen.dart`.
 
 ---
 
-### 5.4 Schemes: List Active Schemes
-* **Feature:** Scheme Discovery & Offers
-* **API Name:** `getActiveSchemes`
-* **Purpose:** Retrieves all active gold kitty savings schemes.
-* **HTTP Method:** `GET`
-* **Endpoint:** `/api/v1/schemes/active`
-* **Authentication:** Optional / Public
-* **Required Headers:** `Accept: application/json`
-* **Filtering (Query Params):**
-  - `duration`: Int (optional: `6`, `12`, `18`) — `TBD — BACKEND DEVELOPER`
-* **Success Status:** `200 OK`
-* **Response:**
+### [USER-01] Get Patron Profile
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/users/profile`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Success Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "User profile retrieved.",
+    "data": {
+      "user": {
+        "id": "67039a48b71d4a001234abcd",
+        "name": "Rihan Saifi",
+        "phone": "+919876543210",
+        "role": "CUSTOMER",
+        "tier": "Privilege Member",
+        "kyc": {
+          "isVerified": true,
+          "documentType": "AADHAAR",
+          "documentNumberMasked": "XXXX XXXX 3210",
+          "documentUrl": "https://res.cloudinary.com/swastik/image/upload/kyc/kyc-123456.jpg",
+          "status": "VERIFIED",
+          "referenceId": "KYC-481920"
+        },
+        "createdAt": "2026-09-15T12:00:00.000Z"
+      }
+    }
+  }
+  ```
+* **Frontend Usage**: `lib/features/settings/data/repositories/profile_repository_impl.dart`, `HeaderNavBar`, `KittyMenuSheet`.
+
+---
+
+### [USER-02] Update Patron Profile
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `PUT`
+* **Endpoint**: `/api/v1/users/profile`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Request Body**:
+  ```json
+  {
+    "name": "Rihan",
+    "surname": "Saifi",
+    "email": "rihan@swastik.in",
+    "dateOfBirth": "1995-08-15T00:00:00.000Z"
+  }
+  ```
+* **Validation**: Name min 2 chars; valid email format; phone cannot be modified through profile update.
+* **Expected Response (`200 OK`)**: Updated profile data object.
+* **Frontend Usage**: `lib/features/settings/data/repositories/profile_repository_impl.dart`, `RegisterProfileScreen`.
+
+---
+
+### [KYC-01] Submit KYC Statutory Verification
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/users/kyc`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Content-Type**: `multipart/form-data`
+* **Form Fields**:
+  * `documentType`: Required string, `'AADHAAR'` or `'PAN'`.
+  * `documentNumber`: Required string. 12 numeric digits for Aadhaar; 10 alphanumeric (`^[A-Z]{5}[0-9]{4}[A-Z]{1}$`) for PAN.
+  * `consentAgreed`: Required boolean / string `'true'`.
+  * `file`: Required file (JPEG, PNG, or PDF; max 10MB).
+* **Success Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "KYC document submitted successfully.",
+    "data": {
+      "referenceId": "KYC-582194",
+      "status": "PENDING",
+      "documentType": "AADHAAR",
+      "documentNumberMasked": "XXXX XXXX 3210",
+      "documentUrl": "https://res.cloudinary.com/swastik/image/upload/kyc/kyc-582194.jpg"
+    }
+  }
+  ```
+* **Frontend Usage**: `lib/features/kyc/presentation/screens/kyc_screen.dart`.
+
+---
+
+### [SCHEME-01] List Active Gold Savings Schemes
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/schemes/active`
+* **Auth Required**: No (Public)
+* **Query Parameters**:
+  * `duration`: Optional integer (e.g. `12`).
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
@@ -236,59 +275,87 @@ Every API response dispatched by the backend must conform to one of two envelope
     "data": {
       "schemes": [
         {
-          "id": "sch_12month_suvarna",
-          "name": "Swastik Suvarna Varsha",
-          "targetAmount": 60000,
+          "id": "67039a48b71d4a0012341001",
+          "name": "Swastik Royal Gold Kitty (11+1)",
+          "targetAmount": 120000,
           "durationMonths": 12,
-          "monthlyInstallment": 5000,
-          "maxCapacity": 100,
-          "currentMembers": 42,
+          "monthlyInstallment": 10000,
+          "maxCapacity": 50,
+          "currentMembers": 28,
           "status": "OPEN",
           "benefits": [
             "1 Month Free: 11 Paid + 12th Month 100% Jeweler Bonus",
             "25% Flat Discount on Jewellery Making Charges",
             "Accumulate 24K 999 Hallmark Purity Gold"
           ],
-          "bannerImageUrl": "assets/banner_clean_bonus.jpg",
+          "bannerImageUrl": "assets/images/kitty_banner_royal_gold.jpg",
           "isPopular": true
         }
       ]
     }
   }
   ```
-* **Error Statuses:** `500 Server Error`
-* **Pagination / Sorting:** `TBD — BACKEND DEVELOPER`
+* **Frontend Usage**: `lib/features/offers/presentation/screens/offers_screen.dart`, `HomeGoldSchemesList`.
 
 ---
 
-### 5.5 Membership: Join Scheme (Dynamic EMI Late-Joiner)
-* **Feature:** Scheme Enrollment
-* **API Name:** `joinScheme`
-* **Purpose:** Enrolls user in scheme, calculates dynamic EMI if joining late.
-* **HTTP Method:** `POST`
-* **Endpoint:** `/api/v1/memberships/join`
-* **Authentication:** Required (`Bearer <token>`)
-* **Required Headers:** `Content-Type: application/json`
-* **Request:**
+### [SCHEME-02] Get Kitty Numbers Availability Matrix (01–50)
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/schemes/:id/numbers`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Path Parameter**: `id` (Scheme Mongo ID).
+* **Expected Response (`200 OK`)**:
   ```json
   {
-    "schemeId": "sch_12month_suvarna"
+    "success": true,
+    "message": "Scheme number slots retrieved.",
+    "data": {
+      "schemeId": "67039a48b71d4a0012341001",
+      "totalSlots": 50,
+      "numbers": [
+        { "number": 1, "label": "01", "status": "BOOKED", "chitToken": "SW-ROYAL-001" },
+        { "number": 7, "label": "07", "status": "AVAILABLE", "chitToken": "SW-ROYAL-007" },
+        { "number": 12, "label": "12", "status": "HELD", "heldUntil": "2026-10-07T12:45:00.000Z" }
+      ]
+    }
   }
   ```
-* **Success Status:** `201 Created`
-* **Response:**
+* **Frontend Usage**: `lib/features/offers/presentation/widgets/kitty_number_picker_sheet.dart`.
+
+---
+
+### [SCHEME-03] Enroll in Scheme / Join Kitty
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/memberships/join`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Request Body**:
+  ```json
+  {
+    "schemeId": "67039a48b71d4a0012341001",
+    "joinedAtMonth": 1,
+    "selectedNumber": 7
+  }
+  ```
+* **Validation**:
+  * `schemeId`: Required valid Mongo ID.
+  * User must have verified KYC (or pending in test).
+  * Scheme must be OPEN and `currentMembers < maxCapacity`.
+* **Success Response (`201 Created`)**:
   ```json
   {
     "success": true,
     "message": "Enrolled in scheme successfully.",
     "data": {
       "membership": {
-        "id": "mem_994411",
-        "schemeId": "sch_12month_suvarna",
-        "schemeName": "Swastik Suvarna Varsha",
-        "tokenNumber": 42,
-        "customMonthlyEmi": 5000,
-        "targetAmount": 60000,
+        "id": "67039a48b71d4a0012349001",
+        "schemeId": "67039a48b71d4a0012341001",
+        "schemeName": "Swastik Royal Gold Kitty (11+1)",
+        "tokenNumber": 7,
+        "chitToken": "SW-ROYAL-007",
+        "customMonthlyEmi": 10000,
+        "targetAmount": 120000,
         "totalPaidAmount": 0,
         "status": "ACTIVE",
         "joinedAtMonth": 1
@@ -296,21 +363,16 @@ Every API response dispatched by the backend must conform to one of two envelope
     }
   }
   ```
-* **Error Statuses:** `400 Bad Request` (Capacity Full), `403 Forbidden` (KYC Required)
-* **Pagination / Sorting / Filtering:** N/A
+* **Frontend Usage**: `lib/features/offers/presentation/screens/review_plan_screen.dart`, `OffersEnrollmentDialog`.
 
 ---
 
-### 5.6 Dashboard: Get Active Summary & Passbook
-* **Feature:** Core Dashboard & Passbook
-* **API Name:** `getMyDashboard`
-* **Purpose:** Aggregates active scheme, progress metrics, and 12-month installment records.
-* **HTTP Method:** `GET`
-* **Endpoint:** `/api/v1/memberships/my-dashboard`
-* **Authentication:** Required (`Bearer <token>`)
-* **Required Headers:** `Accept: application/json`
-* **Success Status:** `200 OK`
-* **Response:**
+### [DASHBOARD-01] Get My Plan Dashboard & Passbook
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/memberships/my-dashboard`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
@@ -318,47 +380,54 @@ Every API response dispatched by the backend must conform to one of two envelope
     "data": {
       "hasActiveScheme": true,
       "dashboard": {
-        "membershipId": "mem_994411",
-        "chitToken": "#SW-042",
-        "schemeName": "Swastik Suvarna Varsha (12-Month Gold Kitty)",
-        "targetAmount": 60000,
-        "customMonthlyEmi": 5000,
+        "membershipId": "67039a48b71d4a0012349001",
+        "chitToken": "SW-ROYAL-007",
+        "schemeName": "Swastik Royal Gold Kitty (11+1)",
+        "targetAmount": 120000,
+        "customMonthlyEmi": 10000,
         "totalMonths": 12,
         "monthsPaid": 8,
-        "totalPaidAmount": 40000,
-        "remainingAmount": 15000,
-        "accumulatedGoldGrams": 5.482,
-        "currentValuation": 41036,
-        "valuationGainPct": 2.59,
+        "totalPaidAmount": 80000,
+        "remainingAmount": 30000,
+        "accumulatedGoldGrams": 10.688,
+        "currentValuation": 80000,
+        "valuationGainPct": 0.0,
         "nextInstallment": {
           "month": 9,
-          "amount": 5000,
-          "dueDate": "2026-09-15T00:00:00.000Z",
-          "daysRemaining": 5
+          "amount": 10000,
+          "dueDate": "2026-10-15T00:00:00.000Z",
+          "daysRemaining": 8
         },
         "passbook": [
           {
             "month": 1,
             "label": "Month 1",
-            "amount": 5000,
+            "amount": 10000,
             "status": "PAID",
-            "paidAt": "2026-01-15T10:30:00.000Z",
+            "paidAt": "2026-02-14T10:30:00.000Z",
             "paymentMethod": "ONLINE",
-            "transactionId": "TXN-SW-10821",
-            "goldGrams": 0.702,
-            "receiptUrl": "https://res.cloudinary.com/swastik/image/upload/receipts/rec_10821.pdf"
+            "transactionId": "TXN-SW-90011",
+            "goldGrams": 1.336,
+            "receiptUrl": "https://res.cloudinary.com/swastik/image/upload/receipts/rec_1.pdf"
           },
           {
             "month": 9,
             "label": "Month 9",
-            "amount": 5000,
+            "amount": 10000,
             "status": "CURRENT",
-            "dueDate": "2026-09-15T00:00:00.000Z"
+            "dueDate": "2026-10-15T00:00:00.000Z"
+          },
+          {
+            "month": 10,
+            "label": "Month 10",
+            "amount": 10000,
+            "status": "UPCOMING",
+            "dueDate": "2026-11-15T00:00:00.000Z"
           },
           {
             "month": 12,
             "label": "Month 12",
-            "amount": 5000,
+            "amount": 10000,
             "status": "BONUS",
             "bonusNote": "100% Jeweler Bonus Deposit on completion"
           }
@@ -367,66 +436,269 @@ Every API response dispatched by the backend must conform to one of two envelope
     }
   }
   ```
-* **Error Statuses:** `401 Unauthorized`, `500 Server Error`
-* **Pagination / Sorting / Filtering:** N/A
+* **Frontend Usage**: `lib/features/dashboard/presentation/screens/dashboard_screen.dart`, `PassbookScreen`, `HomeActiveKittyCard`.
 
 ---
 
-### 5.7 Payments: Initiate Order
-* **Feature:** Installment Checkout
-* **API Name:** `initiatePayment`
-* **Purpose:** Creates GoKwik gateway order and pending payment entry.
-* **HTTP Method:** `POST`
-* **Endpoint:** `/api/v1/payments/initiate`
-* **Authentication:** Required (`Bearer <token>`)
-* **Request:**
+### [RATE-01] Get Live Benchmark Gold Rate
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/rates/gold`
+* **Auth Required**: No (Public)
+* **Success Response (`200 OK`)**:
   ```json
   {
-    "membershipId": "mem_994411",
+    "success": true,
+    "message": "Live gold rates retrieved.",
+    "data": {
+      "rate24k": 7485.50,
+      "rate22k": 6860.00,
+      "rateChangePct": 0.62,
+      "unit": "1 gram",
+      "currency": "INR",
+      "benchmark": "IBJA Official",
+      "updatedAt": "2026-10-07T06:30:00.000Z"
+    }
+  }
+  ```
+* **Frontend Usage**: `HomeGoldRateStrip`, `LiveRatesScreen`, `CalculatorScreen`, `CoinRatesScreen`.
+
+---
+
+### [RATE-02] Admin Update Daily Gold Rate
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/admin/rates/gold`
+* **Auth Required**: Yes (`ADMIN` / `SUPER_ADMIN` role)
+* **Request Body**:
+  ```json
+  {
+    "rate24k": 7520.00,
+    "rate22k": 6890.00,
+    "benchmark": "IBJA Official"
+  }
+  ```
+* **Success Response (`200 OK`)**: Updated rate object.
+
+---
+
+### [PAY-01] Initiate Payment Order (GoKwik)
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/payments/initiate`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Request Body**:
+  ```json
+  {
+    "membershipId": "67039a48b71d4a0012349001",
     "monthFor": 9,
     "paymentMethod": "ONLINE"
   }
   ```
-* **Success Status:** `200 OK`
-* **Response:**
+* **Multi-Month Extension Required**: Backend should accept `months: [9, 10]` to generate single order covering multiple consecutive months.
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
     "message": "Payment order initiated.",
     "data": {
-      "orderId": "gokwik_ord_771829",
-      "paymentId": "pay_662819",
-      "amount": 5000,
+      "orderId": "ORD-SW-9001-M9",
+      "amount": 10000,
       "currency": "INR",
-      "merchantKey": "TBD — BACKEND DEVELOPER"
+      "customer": {
+        "phone": "+919876543210",
+        "email": "patron@swastik.in"
+      },
+      "callbackUrl": "https://api.swastikjewel.com/api/v1/payments/webhook"
     }
   }
   ```
-* **Error Statuses:** `400 Bad Request`, `401 Unauthorized`
+* **Frontend Usage**: `lib/features/checkout/presentation/screens/checkout_screen.dart`.
 
 ---
 
-### 5.8 Payments: Verify / Poll Payment Status
-* **Feature:** Payment Reconciliation
-* **API Name:** `getPaymentStatus`
-* **Purpose:** Polls payment verification status after GoKwik webview closes.
-* **HTTP Method:** `GET`
-* **Endpoint:** `/api/v1/payments/status/:orderId`
-* **Authentication:** Required (`Bearer <token>`)
-* **Success Status:** `200 OK`
-* **Response:**
+### [PAY-02] Poll Payment Status
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/payments/status/:orderId`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Path Parameter**: `orderId` (e.g. `ORD-SW-9001-M9`).
+* **Success Response (`200 OK`)**:
   ```json
   {
     "success": true,
     "message": "Payment status checked.",
     "data": {
-      "orderId": "gokwik_ord_771829",
+      "orderId": "ORD-SW-9001-M9",
       "status": "SUCCESS",
-      "transactionId": "TXN-SW-50291",
-      "receiptUrl": "https://res.cloudinary.com/swastik/image/upload/receipts/rec_50291.pdf",
-      "totalPaidAmount": 45000,
-      "monthsPaid": 9
+      "amount": 10000,
+      "monthFor": 9,
+      "transactionId": "TXN-GK-8192038",
+      "paidAt": "2026-10-07T12:35:00.000Z"
     }
   }
   ```
-* **Error Statuses:** `404 Not Found`
+* **Frontend Usage**: `CheckoutScreen` (status polling dialog).
+
+---
+
+### [PAY-03] Payment Webhook (GoKwik Gateway)
+* **Status**: `[IMPLEMENTED IN SWASTIK_KITTY_BACKEND]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/payments/webhook`
+* **Auth Required**: No (Cryptographic HMAC-SHA256 signature in `x-gokwik-signature` header)
+* **Request Body**: GoKwik payment notification payload.
+* **Behavior**:
+  * Verifies HMAC signature.
+  * Idempotently marks payment `SUCCESS`.
+  * Computes accumulated gold grams based on live rate at moment of payment.
+  * Updates membership ledger.
+* **Success Response (`200 OK`)**: `{"success": true, "message": "Webhook processed successfully."}`
+
+---
+
+### [PAY-04] Request Doorstep Cash Pickup ("Pick Cash")
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/payments/cash-pickup-request`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Request Body**:
+  ```json
+  {
+    "membershipId": "67039a48b71d4a0012349001",
+    "amount": 10000,
+    "monthFor": 9,
+    "pickupAddress": "Flat 402, Royal Palms, Civil Lines, Bareilly",
+    "pickupPincode": "243001",
+    "preferredTimeSlot": "14:00 - 18:00",
+    "contactPhone": "+919876543210"
+  }
+  ```
+* **Expected Response (`201 Created`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Doorstep cash pickup requested. An executive will arrive with verification OTP.",
+    "data": {
+      "requestId": "PCK-SW-10829",
+      "status": "SCHEDULED",
+      "verificationOtp": "7482"
+    }
+  }
+  ```
+* **Frontend Usage**: `lib/features/checkout/presentation/screens/cash_pickup_screen.dart`.
+
+---
+
+### [BOOK-01] Create Booking (Coins / Jewellery / Scheme Reserve)
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `POST`
+* **Endpoint**: `/api/v1/bookings`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Request Body**:
+  ```json
+  {
+    "category": "COINS",
+    "itemName": "4g Gold Coin 24K (999)",
+    "karat": "24K",
+    "weightGrams": 4.0,
+    "unitPrice": 29942,
+    "quantity": 1,
+    "totalAmount": 29942,
+    "notes": "Booked from App"
+  }
+  ```
+* **Expected Response (`201 Created`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Booking confirmed.",
+    "data": {
+      "bookingId": "BKG-SW-50291",
+      "category": "COINS",
+      "itemName": "4g Gold Coin 24K (999)",
+      "totalAmount": 29942,
+      "status": "CONFIRMED",
+      "createdAt": "2026-10-07T12:00:00.000Z"
+    }
+  }
+  ```
+* **Frontend Usage**: `lib/features/coin_rates/presentation/screens/coin_rates_screen.dart` (Book Now CTA).
+
+---
+
+### [BOOK-02] Get Patron Orders & Bookings History
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/bookings`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Query Parameters**:
+  * `category`: Optional filter (`SCHEMES` | `COINS` | `JEWELLERY`).
+* **Expected Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Bookings retrieved.",
+    "data": {
+      "bookings": [
+        {
+          "id": "BKG-SW-50291",
+          "category": "COINS",
+          "itemName": "4g Gold Coin 24K (999)",
+          "weightGrams": 4.0,
+          "totalAmount": 29942,
+          "status": "CONFIRMED",
+          "createdAt": "2026-10-07T12:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+* **Frontend Usage**: `lib/features/orders/presentation/screens/orders_screen.dart`.
+
+---
+
+### [NOTIF-01] Get In-App Notifications Feed
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `GET`
+* **Endpoint**: `/api/v1/notifications`
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Expected Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Notifications retrieved.",
+    "data": {
+      "unreadCount": 2,
+      "notifications": [
+        {
+          "id": "NTF-101",
+          "title": "EMI Installment Due",
+          "body": "Month 9 installment of ₹10,000 for Swastik Royal Gold is due on Oct 15.",
+          "type": "EMI_DUE",
+          "isRead": false,
+          "actionRoute": "/checkout",
+          "createdAt": "2026-10-06T09:00:00.000Z"
+        }
+      ]
+    }
+  }
+  ```
+* **Frontend Usage**: `lib/features/notifications/presentation/screens/notifications_screen.dart`.
+
+---
+
+### [NOTIF-02] Mark Notifications As Read
+* **Status**: `[REQUIRED / NOT CURRENTLY IMPLEMENTED]`
+* **Method**: `PATCH`
+* **Endpoint**: `/api/v1/notifications/read-all` (or `/:id/read`)
+* **Auth Required**: Yes (`Authorization: Bearer <TOKEN>`)
+* **Expected Response (`200 OK`)**:
+  ```json
+  {
+    "success": true,
+    "message": "Notifications marked as read.",
+    "data": { "unreadCount": 0 }
+  }
+  ```
+* **Frontend Usage**: `NotificationsScreen`.
