@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Swastik Jewel Kitty Vault Application">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="kitty_app">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Swastik Jewel | Kitty Vault</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       1. STRICT SUPPRESSION: FLUTTER DWDS DEBUG BLUE PROGRESS BAR
+       Completely eliminates .flutter-loader and .indeterminate from rendering.
+       ========================================================================== */
+    .flutter-loader,
+    .indeterminate,
+    .indeterminate:before,
+    .indeterminate:after,
+    .indeterminate::before,
+    .indeterminate::after {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0px !important;
+      width: 0px !important;
+      pointer-events: none !important;
+      background: transparent !important;
+      animation: none !important;
+    }
+
+    /* ==========================================================================
+       2. LUXURY SWASTIK JEWEL LOADING AESTHETICS (Source: D:\ui design)
+       Deep emerald green: #05241C
+       ========================================================================== */
+    :root {
+      --bg-primary: #05241C;
+      --gold-primary: #CCA243;
+      --gold-light: #F4E2AA;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #05241C;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #FFFFFF;
+    }
+
+    #swastik-loader {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 99999;
+      background-color: #05241C;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: opacity 0.35s ease-out;
+    }
+
+    .diamond-viewport {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 20;
+      opacity: 1;
+      transition: opacity 0.15s ease;
+    }
+
+    .diamond-viewport.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    #diamond-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .damask-pattern-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('assets/damask-pattern.jpg');
+      background-repeat: repeat;
+      background-size: 320px auto;
+      background-position: center top;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      filter: invert(1) brightness(0.68) contrast(1.4) sepia(0.55) hue-rotate(10deg);
+      mix-blend-mode: screen;
+      transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .damask-pattern-bg.visible {
+      opacity: 0.16;
+    }
+
+    .branding-stage {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -48%) scale(0.96);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .branding-stage.visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .brand-logo-only {
+      width: clamp(260px, 68vw, 380px);
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 4px 28px rgba(0, 0, 0, 0.5));
+    }
+
+    .brand-subtitle {
+      margin-top: 10px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: rgba(244, 226, 170, 0.9);
+      text-transform: uppercase;
+    }
+  </style>
+
+  <script>
+    // Record web loader launch timestamp immediately on frame 0
+    window.__kittyWebLoaderStartTime = Date.now();
+
+    // Aggressive watchdog to immediately eradicate DWDS debug loader elements
+    (function () {
+      function purgeLoader() {
+        const loaders = document.querySelectorAll('.flutter-loader');
+        loaders.forEach(function (el) {
+          if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        });
+      }
+      try {
+        const observer = new MutationObserver(purgeLoader);
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      } catch (e) {}
+      window.addEventListener('DOMContentLoaded', purgeLoader);
+    })();
+
+    // Method invoked by Flutter to seamlessly fade out HTML loader overlay
+    window.dismissKittyWebLoader = function () {
+      const loader = document.getElementById('swastik-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        loader.style.pointerEvents = 'none';
+        setTimeout(function () {
+          if (loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 360);
+      }
+    };
+  </script>
+</head>
+<body>
+
+  <!-- ========================================================================
+       PREMIUM SWASTIK JEWEL LOADING SEQUENCE
+       Direct reproduction of D:\ui design\index.html + loader.js
+       Background: #05241C
+       ======================================================================== -->
+  <div id="swastik-loader" aria-live="polite" aria-label="Loading Swastik Jewel">
+    <!-- PHASE 1: Full-Viewport 3D Faceted Crystal Diamond Canvas -->
+    <div class="diamond-viewport">
+      <canvas id="diamond-canvas"></canvas>
+    </div>
+
+    <!-- PHASE 2: Royal Damask Wallpaper Pattern (Background) -->
+    <div class="damask-pattern-bg" id="damaskPattern" aria-hidden="true"></div>
+
+    <!-- PHASE 2: Swastik Jewel Logo (Foreground) -->
+    <div class="branding-stage" id="brandingStage" aria-label="Swastik Jewel Brand">
+      <img src="assets/swastiklogo.svg" alt="Swastik Jewel" class="brand-logo-only" />
+    </div>
+  </div>
+
+  <!-- Loading Sequence Engine Script from loader.js -->
+  <script>
+  (function () {
+    'use strict';
+
+    const DIAMOND_START = 0;       // Immediate frame-0 diamond appearance
+    const DIAMOND_END = 1800;      // 1.8s diamond completely leaves screen (optimized from 2300ms)
+    const LOGO_REVEAL = 1400;      // 1.4s logo & damask pattern fade in during zoom
+    const SEQUENCE_STOP = 2600;    // 2.6s sequence completes cleanly
+
+    class DiamondRenderer3D {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        // Cap DPR at 2.0 to eliminate multi-megapixel canvas fill-rate thrashing on high-DPI screens
+        this.dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+        
+        this.initGeometry();
+        this.resize();
+        this.lightDir = this.normalize([0.42, 0.78, 0.52]);
+
+        // Pre-allocate vertex transform buffers (49 vertices, 0 per-frame heap allocations)
+        const nv = this.vertices.length;
+        this.transX = new Float32Array(nv);
+        this.transY = new Float32Array(nv);
+        this.transZ = new Float32Array(nv);
+        this.projX = new Float32Array(nv);
+        this.projY = new Float32Array(nv);
+
+        // Pre-allocate face processing buffers (94 faces, 0 per-frame heap allocations)
+        const nf = this.faces.length;
+        this.faceIndices = new Int32Array(nf);
+        for (let i = 0; i < nf; i++) this.faceIndices[i] = i;
+        this.faceZAvg = new Float32Array(nf);
+        this.faceIsFront = new Uint8Array(nf);
+        this.faceDotL = new Float32Array(nf);
+        this.faceSpecular = new Float32Array(nf);
+
+        // Pre-allocate sparkle buffers
+        this.maxSparkles = 32;
+        this.sparkleX = new Float32Array(this.maxSparkles);
+        this.sparkleY = new Float32Array(this.maxSparkles);
+        this.sparkleIntensity = new Float32Array(this.maxSparkles);
+        this.sparkleCount = 0;
+
+        // Static constant color strings for back-faces
+        this.BACK_FILL = 'rgba(8, 38, 32, 0.30)';
+        this.BACK_STROKE = 'rgba(225, 232, 240, 0.16)';
+      }
+
+      resize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        this.width = w;
+        this.height = h;
+        this.canvas.width = Math.round(w * this.dpr);
+        this.canvas.height = Math.round(h * this.dpr);
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.scale(this.dpr, this.dpr);
+      }
+
+      normalize(v) {
+        const len = Math.hypot(v[0], v[1], v[2]) || 1;
+        return [v[0] / len, v[1] / len, v[2] / len];
+      }
+
+      cross(a, b) {
+        return [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0]
+        ];
+      }
+
+      initGeometry() {
+        const R_girdle = 76;
+        const R_table = 40;
+        const H_crown = 30;
+        const H_girdle_half = 2;
+        const H_pavilion = 72;
+
+        const verts = [];
+
+        // 1. Table Octagon (0..7)
+        for (let i = 0; i < 8; i++) {
+          const ang = (i * Math.PI) / 4;
+          verts.push([R_table * Math.cos(ang), R_table * Math.sin(ang), H_crown]);
+        }
+
+        // 2. Upper Girdle (8..23)
+        for (let i = 0; i < 16; i++) {
+          const ang = (i * Math.PI) / 8;
+          verts.push([R_girdle * Math.cos(ang), R_girdle * Math.sin(ang), H_girdle_half]);
+        }
+
+        // 3. Lower Girdle (24..39)
+        for (let i = 0; i < 16; i++) {
+          const ang = (i * Math.PI) / 8;
+          verts.push([R_girdle * Math.cos(ang), R_girdle * Math.sin(ang), -H_girdle_half]);
+        }
+
+        // 4. Culet apex (40)
+        const culetIdx = verts.length;
+        verts.push([0, 0, -H_pavilion]);
+
+        // 5. Mid-pavilion star vertices (41..48)
+        const midPavStart = verts.length;
+        const R_mid_pav = 38;
+        const H_mid_pav = -35;
+        for (let i = 0; i < 8; i++) {
+          const ang = ((i + 0.5) * Math.PI) / 4;
+          verts.push([R_mid_pav * Math.cos(ang), R_mid_pav * Math.sin(ang), H_mid_pav]);
+        }
+
+        this.vertices = verts;
+        this.baseVertX = new Float32Array(verts.length);
+        this.baseVertY = new Float32Array(verts.length);
+        this.baseVertZ = new Float32Array(verts.length);
+        for (let i = 0; i < verts.length; i++) {
+          this.baseVertX[i] = verts[i][0];
+          this.baseVertY[i] = verts[i][1];
+          this.baseVertZ[i] = verts[i][2];
+        }
+
+        const faces = [];
+
+        // 1. Table
+        for (let i = 1; i < 7; i++) {
+          faces.push({ indices: [0, i, i + 1], type: 'table' });
+        }
+
+        // 2. Crown
+        for (let i = 0; i < 8; i++) {
+          const t0 = i;
+          const t1 = (i + 1) % 8;
+          const g0 = 8 + i * 2;
+          const g1 = 8 + (i * 2 + 1) % 16;
+          const g2 = 8 + (i * 2 + 2) % 16;
+          faces.push({ indices: [t0, t1, g1], type: 'star' });
+          faces.push({ indices: [t0, g0, g1], type: 'crown' });
+          faces.push({ indices: [t1, g1, g2], type: 'crown' });
+        }
+
+        // 3. Girdle bands
+        for (let i = 0; i < 16; i++) {
+          const u0 = 8 + i;
+          const u1 = 8 + (i + 1) % 16;
+          const l0 = 24 + i;
+          const l1 = 24 + (i + 1) % 16;
+          faces.push({ indices: [u0, l0, l1], type: 'girdle' });
+          faces.push({ indices: [u0, l1, u1], type: 'girdle' });
+        }
+
+        // 4. Pavilion
+        for (let i = 0; i < 8; i++) {
+          const l0 = 24 + i * 2;
+          const l1 = 24 + (i * 2 + 1) % 16;
+          const l2 = 24 + (i * 2 + 2) % 16;
+          const mp = midPavStart + i;
+          faces.push({ indices: [l0, l1, mp], type: 'pavilion' });
+          faces.push({ indices: [l1, l2, mp], type: 'pavilion' });
+          faces.push({ indices: [mp, l0, culetIdx], type: 'pavilion' });
+          faces.push({ indices: [mp, culetIdx, l2], type: 'pavilion' });
+        }
+
+        this.faces = faces;
+
+        // Flatten face vertex indices and PRECOMPUTE model-space unit normals ONCE
+        const nf = faces.length;
+        this.faceV0 = new Int32Array(nf);
+        this.faceV1 = new Int32Array(nf);
+        this.faceV2 = new Int32Array(nf);
+        this.faceNormX = new Float32Array(nf);
+        this.faceNormY = new Float32Array(nf);
+        this.faceNormZ = new Float32Array(nf);
+
+        for (let i = 0; i < nf; i++) {
+          const idx = faces[i].indices;
+          this.faceV0[i] = idx[0];
+          this.faceV1[i] = idx[1];
+          this.faceV2[i] = idx[2];
+
+          const v0 = verts[idx[0]];
+          const v1 = verts[idx[1]];
+          const v2 = verts[idx[2]];
+
+          const e1 = [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]];
+          const e2 = [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]];
+          const n = this.normalize(this.cross(e1, e2));
+          this.faceNormX[i] = n[0];
+          this.faceNormY[i] = n[1];
+          this.faceNormZ[i] = n[2];
+        }
+      }
+
+      clear() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+      }
+
+      render(rotY, scaleFactor, opacity) {
+        if (opacity <= 0.001) {
+          this.clear();
+          return;
+        }
+
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.width, this.height);
+        ctx.globalAlpha = opacity;
+
+        const cx = this.width * 0.5;
+        const cy = this.height * 0.5;
+        const fov = 460;
+        const pitchX = 0.36;
+        const rollZ = 0.06;
+
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const cosX = Math.cos(pitchX), sinX = Math.sin(pitchX);
+        const cosZ = Math.cos(rollZ), sinZ = Math.sin(rollZ);
+
+        // Combined 3x3 rotation matrix: R = Rz * Rx * Ry (precomputed once per frame)
+        const m00 = cosZ * cosY - sinZ * sinX * sinY;
+        const m01 = -sinZ * cosX;
+        const m02 = cosZ * sinY + sinZ * sinX * cosY;
+
+        const m10 = sinZ * cosY + cosZ * sinX * sinY;
+        const m11 = cosZ * cosX;
+        const m12 = sinZ * sinY - cosZ * sinX * cosY;
+
+        const m20 = -cosX * sinY;
+        const m21 = sinX;
+        const m22 = cosX * cosY;
+
+        // Scaled matrix for vertex transformation
+        const sm00 = m00 * scaleFactor, sm01 = m01 * scaleFactor, sm02 = m02 * scaleFactor;
+        const sm10 = m10 * scaleFactor, sm11 = m11 * scaleFactor, sm12 = m12 * scaleFactor;
+        const sm20 = m20 * scaleFactor, sm21 = m21 * scaleFactor, sm22 = m22 * scaleFactor;
+
+        // 1. Transform & Project all vertices (0 allocations)
+        const nv = this.vertices.length;
+        const bx = this.baseVertX, by = this.baseVertY, bz = this.baseVertZ;
+        const tx = this.transX, ty = this.transY, tz = this.transZ;
+        const px = this.projX, py = this.projY;
+
+        for (let i = 0; i < nv; i++) {
+          const vx = bx[i], vy = by[i], vz = bz[i];
+          const x3 = sm00 * vx + sm01 * vy + sm02 * vz;
+          const y3 = sm10 * vx + sm11 * vy + sm12 * vz;
+          const z3 = sm20 * vx + sm21 * vy + sm22 * vz;
+
+          tx[i] = x3;
+          ty[i] = y3;
+          tz[i] = z3;
+
+          const zDist = Math.max(20, fov + z3);
+          const pFactor = fov / zDist;
+          px[i] = cx + x3 * pFactor;
+          py[i] = cy - y3 * pFactor;
+        }
+
+        // 2. Evaluate all 94 faces using precomputed model normals (0 cross products, 0 Math.hypot, 0 allocations)
+        const nf = this.faces.length;
+        const lx = this.lightDir[0], ly = this.lightDir[1], lz = this.lightDir[2];
+        const fnx = this.faceNormX, fny = this.faceNormY, fnz = this.faceNormZ;
+        const v0Arr = this.faceV0, v1Arr = this.faceV1, v2Arr = this.faceV2;
+        const zAvgArr = this.faceZAvg;
+        const isFrontArr = this.faceIsFront;
+        const dotLArr = this.faceDotL;
+        const specArr = this.faceSpecular;
+        const indices = this.faceIndices;
+
+        this.sparkleCount = 0;
+        const allowSparkles = scaleFactor < 6.0;
+
+        for (let i = 0; i < nf; i++) {
+          indices[i] = i;
+          const iv0 = v0Arr[i], iv1 = v1Arr[i], iv2 = v2Arr[i];
+          zAvgArr[i] = (tz[iv0] + tz[iv1] + tz[iv2]) * 0.33333333;
+
+          // Rotate precomputed model normal by unscaled rotation matrix R
+          const nx0 = fnx[i], ny0 = fny[i], nz0 = fnz[i];
+          const nx = m00 * nx0 + m01 * ny0 + m02 * nz0;
+          const ny = m10 * nx0 + m11 * ny0 + m12 * nz0;
+          const nz = m20 * nx0 + m21 * ny0 + m22 * nz0;
+
+          const isFront = nz > -0.15;
+          isFrontArr[i] = isFront ? 1 : 0;
+
+          const dotL = Math.max(0, nx * lx + ny * ly + nz * lz);
+          dotLArr[i] = dotL;
+
+          const rz = 2 * dotL * nz - lz;
+          const specular = Math.pow(Math.max(0, rz), 16);
+          specArr[i] = specular;
+
+          if (isFront && specular > 0.76 && allowSparkles && this.sparkleCount < this.maxSparkles) {
+            this.sparkleX[this.sparkleCount] = px[iv0];
+            this.sparkleY[this.sparkleCount] = py[iv0];
+            this.sparkleIntensity[this.sparkleCount] = specular;
+            this.sparkleCount++;
+          }
+        }
+
+        // 3. Fast in-place insertion sort of face indices by zAvg (0 allocations, <0.02ms)
+        for (let i = 1; i < nf; i++) {
+          const key = indices[i];
+          const zKey = zAvgArr[key];
+          let j = i - 1;
+          while (j >= 0 && zAvgArr[indices[j]] > zKey) {
+            indices[j + 1] = indices[j];
+            j--;
+          }
+          indices[j + 1] = key;
+        }
+
+        // 4. Render faces with batched styles & 0 heap allocations
+        const backLineWidth = Math.min(2.5, 0.5 * Math.max(1, scaleFactor * 0.35));
+        const frontLineWidth = Math.min(4.5, Math.max(0.7, 0.85 * (scaleFactor * 0.38)));
+
+        for (let i = 0; i < nf; i++) {
+          const faceIdx = indices[i];
+          const iv0 = v0Arr[faceIdx];
+          const iv1 = v1Arr[faceIdx];
+          const iv2 = v2Arr[faceIdx];
+
+          ctx.beginPath();
+          ctx.moveTo(px[iv0], py[iv0]);
+          ctx.lineTo(px[iv1], py[iv1]);
+          ctx.lineTo(px[iv2], py[iv2]);
+          ctx.closePath();
+
+          if (!isFrontArr[faceIdx]) {
+            ctx.fillStyle = this.BACK_FILL;
+            ctx.fill();
+            ctx.strokeStyle = this.BACK_STROKE;
+            ctx.lineWidth = backLineWidth;
+            ctx.stroke();
+          } else {
+            const lit = dotLArr[faceIdx];
+            const spec = specArr[faceIdx];
+
+            const r = Math.min(255, (220 + lit * 28 + spec * 45) | 0);
+            const g = Math.min(255, (226 + lit * 24 + spec * 40) | 0);
+            const b = Math.min(255, (235 + lit * 18 + spec * 35) | 0);
+            const a = Math.min(0.96, 0.70 + lit * 0.20 + spec * 0.28);
+
+            ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + a.toFixed(2) + ')';
+            ctx.fill();
+
+            const edgeAlpha = Math.min(0.95, 0.52 + spec * 0.45);
+            ctx.strokeStyle = 'rgba(242, 246, 252,' + edgeAlpha.toFixed(2) + ')';
+            ctx.lineWidth = frontLineWidth;
+            ctx.stroke();
+          }
+        }
+
+        // 5. Draw sparkles without save()/restore() inside loop
+        const sc = this.sparkleCount;
+        if (sc > 0) {
+          ctx.lineWidth = 1.1;
+          for (let i = 0; i < sc; i++) {
+            const sx = this.sparkleX[i];
+            const sy = this.sparkleY[i];
+            const intensity = this.sparkleIntensity[i];
+            const size = 5.5 * intensity;
+
+            ctx.strokeStyle = 'rgba(255, 255, 255,' + (0.92 * intensity).toFixed(2) + ')';
+            ctx.beginPath();
+            ctx.moveTo(sx - size, sy);
+            ctx.lineTo(sx + size, sy);
+            ctx.moveTo(sx, sy - size);
+            ctx.lineTo(sx, sy + size);
+            ctx.stroke();
+          }
+        }
+
+        ctx.globalAlpha = 1.0;
+      }
+    }
+
+    class SwastikLoadingController {
+      constructor() {
+        this.loaderEl = document.getElementById('swastik-loader');
+        this.diamondViewport = document.querySelector('.diamond-viewport');
+        this.diamondCanvas = document.getElementById('diamond-canvas');
+        this.damaskPattern = document.getElementById('damaskPattern');
+        this.brandingStage = document.getElementById('brandingStage');
+
+        this.diamondRenderer = new DiamondRenderer3D(this.diamondCanvas);
+        this.startTime = performance.now();
+        this.isRunning = true;
+        this.phaseFlags = { diamondExited: false, brandingShown: false };
+
+        window.addEventListener('resize', () => {
+          this.diamondRenderer.resize();
+        });
+
+        this.tick = this.tick.bind(this);
+        this.animFrameId = requestAnimationFrame(this.tick);
+      }
+
+      tick(currentTime) {
+        if (!this.isRunning) return;
+
+        const elapsed = currentTime - this.startTime;
+
+        if (elapsed < DIAMOND_END) {
+          const p = elapsed / DIAMOND_END;
+          const rotProgress = p < 0.5
+            ? 4 * p * p * p
+            : 1 - Math.pow(-2 * p + 2, 3) / 2;
+          const currentAngle = rotProgress * Math.PI * 2;
+          const baseScale = 0.82;
+          const approach = Math.pow(p, 2.85);
+          const scaleFactor = baseScale + approach * 38.0;
+
+          let opacity = 1.0;
+          if (p < 0.06) {
+            opacity = p / 0.06;
+          } else if (p > 0.94) {
+            opacity = Math.max(0, (1.0 - p) / 0.06);
+          }
+
+          this.diamondRenderer.render(currentAngle, scaleFactor, opacity);
+        } else if (elapsed >= DIAMOND_END && !this.phaseFlags.diamondExited) {
+          this.phaseFlags.diamondExited = true;
+          this.diamondViewport.classList.add('hidden');
+          this.diamondRenderer.clear();
+        }
+
+        if (elapsed >= LOGO_REVEAL && !this.phaseFlags.brandingShown) {
+          this.phaseFlags.brandingShown = true;
+          if (this.damaskPattern) this.damaskPattern.classList.add('visible');
+          if (this.brandingStage) this.brandingStage.classList.add('visible');
+        }
+
+        if (elapsed < SEQUENCE_STOP) {
+          this.animFrameId = requestAnimationFrame(this.tick);
+        } else {
+          // Freeze cleanly on final logo state until Flutter reveals Login
+          this.isRunning = false;
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      new SwastikLoadingController();
+    });
+  })();
+  </script>
+
+  <!-- Cooperatively schedule Flutter bootstrap to grant the diamond animation
+       an un-interrupted 60 FPS window during initial render & spin -->
+  <script>
+    setTimeout(function () {
+      var s = document.createElement('script');
+      s.src = 'flutter_bootstrap.js';
+      s.async = true;
+      document.body.appendChild(s);
+    }, 450);
+  </script>
+</body>
+</html>

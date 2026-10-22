@@ -1,0 +1,10 @@
+{
+  "name": "swastik-kitty-frontend-inner-wrapper",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "app": "cd kitty_app && ./run.sh",
+    "dev": "cd kitty_app && ./run.sh",
+    "start": "cd kitty_app && ./run.sh"
+  }
+}
