@@ -478,87 +478,110 @@ class _RegisterProfileScreenState
 
           const SizedBox(height: 24),
 
-          // Field 1: First Name Card
-          _buildFieldCard(
-            fieldKey: const Key('input_profile_name'),
-            icon: Icons.person_outline_rounded,
-            label: 'First Name',
-            controller: _firstNameController,
-            keyboardType: TextInputType.name,
-            hintText: 'Enter your first name',
-            validator: (String? value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your first name';
-              }
-              if (value.trim().length < 2) {
-                return 'First name must be at least 2 characters';
-              }
-              return null;
-            },
+          // Unified Centered Form Card
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFEFE8DE), width: 1.0),
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      color: Color(0x08000000),
+                      blurRadius: 16,
+                      spreadRadius: 0,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    // Field 1: First Name
+                    _buildCardInputField(
+                      fieldKey: const Key('input_profile_name'),
+                      icon: Icons.person_outline_rounded,
+                      placeholder: 'Enter first name',
+                      controller: _firstNameController,
+                      keyboardType: TextInputType.name,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your first name';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'First name must be at least 2 characters';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Field 2: Last Name
+                    _buildCardInputField(
+                      fieldKey: const Key('input_profile_last_name'),
+                      icon: Icons.badge_outlined,
+                      placeholder: 'Enter last name',
+                      controller: _lastNameController,
+                      keyboardType: TextInputType.name,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your last name';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Field 3: Phone Number
+                    _buildCardInputField(
+                      fieldKey: const Key('input_profile_phone'),
+                      icon: Icons.phone_android_rounded,
+                      placeholder: 'Enter 10-digit mobile number',
+                      controller: _mobileController,
+                      keyboardType: TextInputType.phone,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your phone number';
+                        }
+                        final String digits = value.replaceAll(RegExp(r'\D'), '');
+                        if (digits.length < 10) {
+                          return 'Please enter a valid 10-digit mobile number';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Field 4: Email Address
+                    _buildCardInputField(
+                      fieldKey: const Key('input_profile_email'),
+                      icon: Icons.mail_outline_rounded,
+                      placeholder: 'Enter email address',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your email address';
+                        }
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
 
-          const SizedBox(height: 14),
-
-          // Field 2: Last Name Card
-          _buildFieldCard(
-            fieldKey: const Key('input_profile_last_name'),
-            icon: Icons.badge_outlined,
-            label: 'Last Name',
-            controller: _lastNameController,
-            keyboardType: TextInputType.name,
-            hintText: 'Enter your last name',
-            validator: (String? value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your last name';
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 14),
-
-          // Field 3: Phone Number Card
-          _buildFieldCard(
-            fieldKey: const Key('input_profile_phone'),
-            icon: Icons.phone_android_rounded,
-            label: 'Phone Number',
-            controller: _mobileController,
-            keyboardType: TextInputType.phone,
-            hintText: '+91 98765 43210',
-            validator: (String? value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your phone number';
-              }
-              final String digits = value.replaceAll(RegExp(r'\D'), '');
-              if (digits.length < 10) {
-                return 'Please enter a valid 10-digit mobile number';
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 14),
-
-          // Field 4: Email Address Card
-          _buildFieldCard(
-            fieldKey: const Key('input_profile_email'),
-            icon: Icons.mail_outline_rounded,
-            label: 'Email Address',
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            hintText: 'name@example.com',
-            validator: (String? value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email address';
-              }
-              if (!value.contains('@') || !value.contains('.')) {
-                return 'Please enter a valid email address';
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // NEXT CTA Button
           SizedBox(
@@ -636,107 +659,147 @@ class _RegisterProfileScreenState
 
           const SizedBox(height: 24),
 
-          // Field 1: Date of Birth Card
-          _buildFieldCard(
-            fieldKey: const Key('input_profile_dob'),
-            icon: Icons.calendar_today_rounded,
-            label: 'Date of Birth (DD/MM/YYYY)',
-            controller: _dobController,
-            keyboardType: TextInputType.datetime,
-            hintText: 'DD/MM/YYYY',
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.date_range_rounded,
-                  color: Color(0xFF063B2C)),
-              onPressed: _selectDateOfBirth,
-            ),
-            onTap: _selectDateOfBirth,
-            readOnly: true,
-            validator: (String? value) {
-              if (value != null && value.trim().isNotEmpty) {
-                final List<String> parts = value.trim().split('/');
-                if (parts.length != 3) {
-                  return 'Use DD/MM/YYYY format';
-                }
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 14),
-
-          // Field 2: Residential Address Card
-          _buildFieldCard(
-            fieldKey: const Key('input_profile_address'),
-            icon: Icons.home_outlined,
-            label: 'Residential Address (House / Flat / Street)',
-            controller: _addressController,
-            keyboardType: TextInputType.streetAddress,
-            hintText: 'e.g. Flat 302, Royal Palms Residency, MG Road',
-            validator: (String? value) {
-              if (value != null &&
-                  value.trim().isNotEmpty &&
-                  value.trim().length < 5) {
-                return 'Address must be at least 5 characters';
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 14),
-
-          // Field 3 & 4: City & Pincode Row (Equal 1:1 Flex, Compact, Single-line Labels, 6-digit Pincode)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                child: _buildFieldCard(
-                  fieldKey: const Key('input_profile_city'),
-                  icon: Icons.location_city_rounded,
-                  label: 'City',
-                  controller: _cityController,
-                  keyboardType: TextInputType.text,
-                  hintText: 'e.g. Mumbai',
-                  compact: true,
-                  validator: (String? value) {
-                    if (value != null &&
-                        value.trim().isNotEmpty &&
-                        value.trim().length < 2) {
-                      return 'Min 2 chars';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildFieldCard(
-                  fieldKey: const Key('input_profile_pincode'),
-                  icon: Icons.pin_drop_outlined,
-                  label: 'Pincode',
-                  controller: _pincodeController,
-                  keyboardType: TextInputType.number,
-                  hintText: '400001',
-                  compact: true,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(6),
+          // Unified Centered Form Card
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFEFE8DE), width: 1.0),
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      color: Color(0x08000000),
+                      blurRadius: 16,
+                      spreadRadius: 0,
+                      offset: Offset(0, 4),
+                    ),
                   ],
-                  validator: (String? value) {
-                    if (value != null && value.trim().isNotEmpty) {
-                      final String clean =
-                          value.replaceAll(RegExp(r'\D'), '');
-                      if (clean.length != 6) {
-                        return 'Must be 6 digits';
-                      }
-                    }
-                    return null;
-                  },
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    // Field 1: Date of Birth
+                    _buildCardInputField(
+                      fieldKey: const Key('input_profile_dob'),
+                      icon: Icons.calendar_today_rounded,
+                      placeholder: 'DD/MM/YYYY',
+                      controller: _dobController,
+                      keyboardType: TextInputType.datetime,
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.date_range_rounded,
+                          color: Color(0xFF063B2C),
+                          size: 22,
+                        ),
+                        onPressed: _selectDateOfBirth,
+                      ),
+                      onTap: _selectDateOfBirth,
+                      readOnly: true,
+                      validator: (String? value) {
+                        if (value != null && value.trim().isNotEmpty) {
+                          final List<String> parts = value.trim().split('/');
+                          if (parts.length != 3) {
+                            return 'Use DD/MM/YYYY format';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Field 2: Residential Address
+                    _buildCardInputField(
+                      fieldKey: const Key('input_profile_address'),
+                      icon: Icons.home_outlined,
+                      placeholder: 'Enter house / flat / street address',
+                      controller: _addressController,
+                      keyboardType: TextInputType.streetAddress,
+                      validator: (String? value) {
+                        if (value != null &&
+                            value.trim().isNotEmpty &&
+                            value.trim().length < 5) {
+                          return 'Address must be at least 5 characters';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Field 3 & 4: City & Pincode (Responsive LayoutBuilder: side-by-side on wide screens, stacked on narrow)
+                    LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        final bool isWide = constraints.maxWidth >= 310;
+                        final Widget cityWidget = _buildCardInputField(
+                          fieldKey: const Key('input_profile_city'),
+                          icon: Icons.location_city_rounded,
+                          placeholder: 'Enter city',
+                          controller: _cityController,
+                          keyboardType: TextInputType.text,
+                          compact: isWide,
+                          validator: (String? value) {
+                            if (value != null &&
+                                value.trim().isNotEmpty &&
+                                value.trim().length < 2) {
+                              return 'Min 2 chars';
+                            }
+                            return null;
+                          },
+                        );
+                        final Widget pincodeWidget = _buildCardInputField(
+                          fieldKey: const Key('input_profile_pincode'),
+                          icon: Icons.pin_drop_outlined,
+                          placeholder: isWide ? '6-digit pincode' : 'Enter 6-digit pincode',
+                          controller: _pincodeController,
+                          keyboardType: TextInputType.number,
+                          compact: isWide,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          validator: (String? value) {
+                            if (value != null && value.trim().isNotEmpty) {
+                              final String clean =
+                                  value.replaceAll(RegExp(r'\D'), '');
+                              if (clean.length != 6) {
+                                return 'Must be 6 digits';
+                              }
+                            }
+                            return null;
+                          },
+                        );
+
+                        if (isWide) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Expanded(child: cityWidget),
+                              const SizedBox(width: 12),
+                              Expanded(child: pincodeWidget),
+                            ],
+                          );
+                        } else {
+                          return Column(
+                            children: <Widget>[
+                              cityWidget,
+                              const SizedBox(height: 14),
+                              pincodeWidget,
+                            ],
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // NEXT CTA Button
           SizedBox(
@@ -831,121 +894,75 @@ class _RegisterProfileScreenState
 
           const SizedBox(height: 24),
 
-          // Nominee Name
-          _buildFieldCard(
-            fieldKey: const Key('input_nominee_name'),
-            icon: Icons.person_add_alt_1_rounded,
-            label: 'Nominee Full Name',
-            controller: _nomineeNameController,
-            keyboardType: TextInputType.name,
-            hintText: 'Enter nominee name',
-            validator: (String? value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter nominee full name';
-              }
-              if (value.trim().length < 2) {
-                return 'Nominee name must be at least 2 characters';
-              }
-              return null;
-            },
-          ),
-
-          const SizedBox(height: 14),
-
-          // Nominee Relationship Dropdown
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFFEFE8DE)),
-              boxShadow: const <BoxShadow>[
-                BoxShadow(
-                  color: Color(0x05000000),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
+          // Unified Centered Form Card
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFEFE8DE), width: 1.0),
+                  boxShadow: const <BoxShadow>[
+                    BoxShadow(
+                      color: Color(0x08000000),
+                      blurRadius: 16,
+                      spreadRadius: 0,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    // Nominee Name
+                    _buildCardInputField(
+                      fieldKey: const Key('input_nominee_name'),
+                      icon: Icons.person_add_alt_1_rounded,
+                      placeholder: 'Enter nominee full name',
+                      controller: _nomineeNameController,
+                      keyboardType: TextInputType.name,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter nominee full name';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Nominee name must be at least 2 characters';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Nominee Relationship Dropdown
+                    _buildRelationshipDropdownField(),
+
+                    const SizedBox(height: 14),
+
+                    // Nominee Mobile Number
+                    _buildCardInputField(
+                      fieldKey: const Key('input_nominee_phone'),
+                      icon: Icons.phone_android_rounded,
+                      placeholder: 'Enter nominee mobile number',
+                      controller: _nomineePhoneController,
+                      keyboardType: TextInputType.phone,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter nominee phone number';
+                        }
+                        final String digits = value.replaceAll(RegExp(r'\D'), '');
+                        if (digits.length < 10) {
+                          return 'Please enter a valid 10-digit mobile number';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFAF5EB),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.people_alt_outlined,
-                      color: Color(0xFFC88A35), size: 20),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        'Relationship with Patron',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF7A8682),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedRelationship,
-                          isDense: true,
-                          isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                              color: Color(0xFF063B2C)),
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF101915),
-                          ),
-                          items: _relationshipOptions.map((String rel) {
-                            return DropdownMenuItem<String>(
-                              value: rel,
-                              child: Text(rel),
-                            );
-                          }).toList(),
-                          onChanged: (String? val) {
-                            if (val != null) {
-                              setState(() => _selectedRelationship = val);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Nominee Mobile Number
-          _buildFieldCard(
-            fieldKey: const Key('input_nominee_phone'),
-            icon: Icons.phone_android_rounded,
-            label: 'Nominee Mobile Number',
-            controller: _nomineePhoneController,
-            keyboardType: TextInputType.phone,
-            hintText: '10-digit mobile number',
-            validator: (String? value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter nominee phone number';
-              }
-              final String digits = value.replaceAll(RegExp(r'\D'), '');
-              if (digits.length < 10) {
-                return 'Please enter a valid 10-digit mobile number';
-              }
-              return null;
-            },
           ),
 
           const SizedBox(height: 18),
@@ -978,7 +995,7 @@ class _RegisterProfileScreenState
             ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // Submit & Proceed CTA Button
           SizedBox(
@@ -1050,101 +1067,170 @@ class _RegisterProfileScreenState
     );
   }
 
-  Widget _buildFieldCard({
+  /// Relationship Dropdown with integrated cream icon box & placeholder
+  Widget _buildRelationshipDropdownField() {
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedRelationship,
+      icon: const Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: Color(0xFF063B2C),
+        size: 20,
+      ),
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 14.5,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF101915),
+      ),
+      isExpanded: true,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFFFAF9F6),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF5EB),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFF3ECE0), width: 0.8),
+            ),
+            child: const Icon(
+              Icons.people_alt_outlined,
+              color: Color(0xFFC88A35),
+              size: 19,
+            ),
+          ),
+        ),
+        prefixIconConstraints: const BoxConstraints(
+          minWidth: 54,
+          minHeight: 50,
+        ),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFEAE4D9), width: 1.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFEAE4D9), width: 1.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF063B2C), width: 1.4),
+        ),
+      ),
+      hint: Text(
+        'Select relationship',
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 13.5,
+          color: const Color(0xFF8C9591),
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      items: _relationshipOptions.map((String rel) {
+        return DropdownMenuItem<String>(
+          value: rel,
+          child: Text(rel),
+        );
+      }).toList(),
+      onChanged: (String? val) {
+        if (val != null) {
+          setState(() => _selectedRelationship = val);
+        }
+      },
+    );
+  }
+
+  /// Modern unified input field with cream icon container and internal placeholder
+  Widget _buildCardInputField({
     required IconData icon,
-    required String label,
+    required String placeholder,
     required TextEditingController controller,
     required TextInputType keyboardType,
     required FormFieldValidator<String> validator,
-    String? hintText,
+    Key? fieldKey,
     Widget? suffixIcon,
     VoidCallback? onTap,
     bool readOnly = false,
     bool compact = false,
     List<TextInputFormatter>? inputFormatters,
-    Key? fieldKey,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEFE8DE)),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+    return TextFormField(
+      key: fieldKey,
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      validator: validator,
+      readOnly: readOnly,
+      onTap: onTap,
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: compact ? 13.5 : 14.5,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF101915),
       ),
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 12 : 16,
-        vertical: compact ? 12 : 14,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            width: compact ? 34 : 42,
-            height: compact ? 34 : 42,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: const Color(0xFFFAF9F6),
+        hintText: placeholder,
+        hintStyle: GoogleFonts.plusJakartaSans(
+          fontSize: compact ? 12.5 : 13.5,
+          color: const Color(0xFF8C9591),
+          fontWeight: FontWeight.w400,
+        ),
+        prefixIcon: Padding(
+          padding: EdgeInsets.all(compact ? 6.0 : 8.0),
+          child: Container(
+            width: compact ? 34 : 38,
+            height: compact ? 34 : 38,
             decoration: BoxDecoration(
               color: const Color(0xFFFAF5EB),
-              borderRadius: BorderRadius.circular(compact ? 10 : 12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFF3ECE0), width: 0.8),
             ),
             child: Icon(
               icon,
               color: const Color(0xFFC88A35),
-              size: compact ? 17 : 20,
+              size: compact ? 17 : 19,
             ),
           ),
-          SizedBox(width: compact ? 10 : 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: compact ? 12.0 : 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF7A8682),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                TextFormField(
-                  key: fieldKey,
-                  controller: controller,
-                  keyboardType: keyboardType,
-                  inputFormatters: inputFormatters,
-                  validator: validator,
-                  readOnly: readOnly,
-                  onTap: onTap,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: compact ? 14.5 : 15.5,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF101915),
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: hintText,
-                    hintStyle: GoogleFonts.plusJakartaSans(
-                      fontSize: compact ? 13.0 : 14.0,
-                      color: const Color(0xFFA8A29E),
-                      fontWeight: FontWeight.w400,
-                    ),
-                    contentPadding: const EdgeInsets.only(top: 2, bottom: 2),
-                    border: InputBorder.none,
-                    errorStyle: const TextStyle(fontSize: 11, height: 1.1),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ?suffixIcon,
-        ],
+        ),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: compact ? 46 : 54,
+          minHeight: compact ? 44 : 50,
+        ),
+        suffixIcon: suffixIcon,
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 12,
+          vertical: compact ? 12 : 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFEAE4D9), width: 1.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFEAE4D9), width: 1.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF063B2C), width: 1.4),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.0),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 1.4),
+        ),
+        errorStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 11.0,
+          color: const Color(0xFFDC2626),
+          height: 1.15,
+        ),
       ),
     );
   }
