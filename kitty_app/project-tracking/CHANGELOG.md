@@ -1,5 +1,34 @@
 # Kitty App — Change Log
 
+## 2026-10-24
+
+### 16:35 IST — Frontend & Mobile Deployment — Fix Review Your Plan Screen Responsiveness and Flutter Overflow
+- **Files changed:**
+  - `lib/features/offers/presentation/screens/review_plan_screen.dart`
+  - `test/widget/offers/review_plan_screen_test.dart`
+  - `build/app/outputs/flutter-apk/app-debug.apk`
+- **Root Causes:**
+  - **Scheme Header Collisions:** The outer header `Row` contained an unconstrained inner `Row` for the scheme icon and title alongside an unconstrained `Edit` button. When scheme names were long (e.g., `Swastik Samriddhi 11+1 Plan`), the title expanded beyond the available horizontal space, colliding directly into the `Edit` button and causing a `RenderFlex overflowed by 2.1 pixels on the right`.
+  - **Bonus Eligibility Overflow:** The `Bonus Eligibility` row rendered both its label (~115px) and description text (`Guaranteed bonus on completion`, ~215px) inside a rigid `Row` without `Expanded` or flex constraints. Together with card padding (18px each side) and page margins (20px each side), the total width (357px) exceeded the available card inner width on 320px–390px mobile screens, throwing a yellow-and-black `RenderFlex overflowed by 43 pixels on the right` warning indicator.
+  - **Key-Value Row Flexibility:** `_buildDetailRow` lacked flex boundaries between labels and values. Long labels (e.g. `Total Target Contribution`) and long values (such as lengthy patron emails or addresses) risked horizontal collisions and text clipping.
+  - **CTA Button Scaling:** The submit button lacked scalable down-fitting on narrow 320px screens.
+- **Fixes Applied:**
+  - **Scheme Header:** Replaced the unconstrained nested row with a single flattened `Row` containing the fixed 36x36 gold icon, `Expanded` for `_planTitle` with `maxLines: 2` and `TextOverflow.ellipsis`, 8px spacing, and the `Edit` button with `HitTestBehavior.opaque` touch target. Prevents overlap for any short or long scheme title without pushing the `Edit` button outside the card.
+  - **Bonus Eligibility Responsiveness:** Introduced `_buildBonusEligibilityRow` utilizing `LayoutBuilder`:
+    - On narrow card widths (`< 270px`, e.g. 320px screens): stacks label and description vertically with 4px separation for optimal readability and zero clipping.
+    - On standard and wide screens (`>= 270px`, e.g. 360px, 390px, 430px): renders label on the left and the full description inside an `Expanded` right-aligned container that wraps naturally across multiple lines without truncating bonus data.
+  - **Detail Rows Flexibility:** Redesigned `_buildDetailRow` with proportional flex constraints (`labelFlex: 5, valueFlex: 3` for scheme rows; `labelFlex: 3, valueFlex: 5` for patron details; `labelFlex: 4, valueFlex: 5` for nominee details). Inserted zero-width spaces (`\u200B`) after `@` and `.` characters in email addresses to enable clean, sensible word-breaking across lines.
+  - **Patron & Nominee Card Headers:** Wrapped 'Patron Details' and 'Nominee Registration' titles in `Expanded` to prevent collision with their respective `Edit` buttons under high accessibility font scaling.
+  - **Modal Bottom Sheet:** Made 'Select Plan Duration' and plan option list items fully responsive using `Expanded`.
+  - **CTA Button:** Wrapped 'Enroll & Proceed to Payment' text in `FittedBox(fit: BoxFit.scaleDown)` to guarantee it scales smoothly on narrow viewports.
+- **Testing:**
+  - `flutter analyze`: Passed with 0 errors, 0 warnings across all project files.
+  - `flutter test test/widget/offers/review_plan_screen_test.dart`: All 8 tests passed covering Screenshot 1 (`ddd`), Screenshot 2 (`Swastik Samriddhi 11+1 Plan`), responsive widths (320px, 360px, 390px, 430px), multi-line email/address, and modal duration sheet.
+  - `flutter test test/widget/offers/start_kitty_flow_test.dart`: All 7 tests passed.
+  - `flutter test test/widget/offers/kitty_number_picker_test.dart`: All 6 tests passed.
+  - **Device Verification:** Built fresh debug APK, pushed to `/data/local/tmp/app.apk`, installed via `pm install -r` on connected physical phone (`Redmi 2406ERN9CI`, Android 15), confirmed app started cleanly (PID 27376), and verified zero error logs in Android logcat.
+- **Status:** Completed.
+
 ## 2026-10-22
 
 ### 16:20 IST — Mobile Deployment — Installed Updated Redesign APK on Physical Device

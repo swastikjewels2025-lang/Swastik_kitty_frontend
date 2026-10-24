@@ -80,12 +80,14 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(
-                    'Select Plan Duration',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111A16),
+                  Expanded(
+                    child: Text(
+                      'Select Plan Duration',
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF111A16),
+                      ),
                     ),
                   ),
                   IconButton(
@@ -180,35 +182,38 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
           ),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF111A16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111A16),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '₹$monthly/mo • Total: ₹$total',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: const Color(0xFF6B7280),
+                  const SizedBox(height: 3),
+                  Text(
+                    '₹$monthly/mo • Total: ₹$total',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: const Color(0xFF6B7280),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            if (isSelected)
+            if (isSelected) ...<Widget>[
+              const SizedBox(width: 8),
               const Icon(
                 Icons.check_circle_rounded,
                 color: AppColors.primaryEmerald,
                 size: 22,
               ),
+            ],
           ],
         ),
       ),
@@ -385,55 +390,60 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                         children: <Widget>[
                           // Card Header
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Row(
-                                children: <Widget>[
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFBE9CE),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.monetization_on_outlined,
-                                        color: Color(0xFFB45309),
-                                        size: 20,
-                                      ),
-                                    ),
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFBE9CE),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.monetization_on_outlined,
+                                    color: Color(0xFFB45309),
+                                    size: 20,
                                   ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    _planTitle,
-                                    style: GoogleFonts.playfairDisplay(
-                                      fontSize: 16.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF111A16),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  _planTitle,
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF111A16),
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               GestureDetector(
+                                behavior: HitTestBehavior.opaque,
                                 onTap: _showEditPlanModal,
-                                child: Row(
-                                  children: <Widget>[
-                                    Text(
-                                      'Edit',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primaryEmerald,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Text(
+                                        'Edit',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primaryEmerald,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.edit_outlined,
-                                      color: AppColors.primaryEmerald,
-                                      size: 15,
-                                    ),
-                                  ],
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        color: AppColors.primaryEmerald,
+                                        size: 15,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -474,35 +484,42 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text(
-                                'Patron Details',
-                                style: GoogleFonts.playfairDisplay(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF111A16),
+                              Expanded(
+                                child: Text(
+                                  'Patron Details',
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF111A16),
+                                  ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               GestureDetector(
+                                behavior: HitTestBehavior.opaque,
                                 onTap: () => context.push(RoutePaths.profile),
-                                child: Row(
-                                  children: <Widget>[
-                                    Text(
-                                      'Edit',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primaryEmerald,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Text(
+                                        'Edit',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primaryEmerald,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.edit_outlined,
-                                      color: AppColors.primaryEmerald,
-                                      size: 15,
-                                    ),
-                                  ],
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        color: AppColors.primaryEmerald,
+                                        size: 15,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -510,10 +527,10 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                           const SizedBox(height: 12),
                           const Divider(color: Color(0xFFF5EFE7), height: 1),
                           const SizedBox(height: 8),
-                          _buildDetailRow('Name', userName),
-                          _buildDetailRow('Mobile', userPhone),
-                          _buildDetailRow('Email', userEmail),
-                          if (userAddress != '-') _buildDetailRow('Address', userAddress),
+                          _buildDetailRow('Name', userName, labelFlex: 3, valueFlex: 5),
+                          _buildDetailRow('Mobile', userPhone, labelFlex: 3, valueFlex: 5),
+                          _buildDetailRow('Email', userEmail, labelFlex: 3, valueFlex: 5, isEmail: true),
+                          if (userAddress != '-') _buildDetailRow('Address', userAddress, labelFlex: 3, valueFlex: 5),
                         ],
                       ),
                     ),
@@ -539,35 +556,42 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text(
-                                'Nominee Registration',
-                                style: GoogleFonts.playfairDisplay(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF111A16),
+                              Expanded(
+                                child: Text(
+                                  'Nominee Registration',
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF111A16),
+                                  ),
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               GestureDetector(
+                                behavior: HitTestBehavior.opaque,
                                 onTap: () => context.push(RoutePaths.profile),
-                                child: Row(
-                                  children: <Widget>[
-                                    Text(
-                                      'Edit',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primaryEmerald,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      Text(
+                                        'Edit',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primaryEmerald,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
-                                      Icons.edit_outlined,
-                                      color: AppColors.primaryEmerald,
-                                      size: 15,
-                                    ),
-                                  ],
+                                      const SizedBox(width: 4),
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        color: AppColors.primaryEmerald,
+                                        size: 15,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
@@ -575,9 +599,9 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                           const SizedBox(height: 12),
                           const Divider(color: Color(0xFFF5EFE7), height: 1),
                           const SizedBox(height: 8),
-                          _buildDetailRow('Nominee Name', nomineeName),
-                          _buildDetailRow('Relationship', nomineeRel),
-                          _buildDetailRow('Nominee Mobile', nomineePhone),
+                          _buildDetailRow('Nominee Name', nomineeName, labelFlex: 4, valueFlex: 5),
+                          _buildDetailRow('Relationship', nomineeRel, labelFlex: 4, valueFlex: 5),
+                          _buildDetailRow('Nominee Mobile', nomineePhone, labelFlex: 4, valueFlex: 5),
                         ],
                       ),
                     ),
@@ -608,12 +632,15 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                                   strokeWidth: 2.2,
                                 ),
                               )
-                            : Text(
-                                'Enroll & Proceed to Payment',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.3,
+                            : FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'Enroll & Proceed to Payment',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
                                 ),
                               ),
                       ),
@@ -630,26 +657,120 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildBonusEligibilityRow(String label, String value) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        // On narrow card widths (< 270px, e.g. 320px screens), stack vertically for optimal readability.
+        // On standard screens (>= 270px), render side-by-side with the description wrapping naturally on the right.
+        final bool isNarrow = constraints.maxWidth < 270;
+
+        if (isNarrow) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF6B6864),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111A16),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF6B6864),
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111A16),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    int labelFlex = 5,
+    int valueFlex = 3,
+    bool isEmail = false,
+  }) {
+    if (label == 'Bonus Eligibility') {
+      return _buildBonusEligibilityRow(label, value);
+    }
+
+    final String formattedValue = isEmail
+        ? value.replaceAll('@', '@\u200B').replaceAll('.', '.\u200B')
+        : value;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFF6B6864),
+          Expanded(
+            flex: labelFlex,
+            child: Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF6B6864),
+                height: 1.35,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF111A16),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: valueFlex,
+            child: Text(
+              formattedValue,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111A16),
+                height: 1.35,
+              ),
             ),
           ),
         ],
