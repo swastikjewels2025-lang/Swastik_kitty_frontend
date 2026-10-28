@@ -512,6 +512,39 @@ class AppAuthNotifier extends Notifier<AppAuthState> {
     } catch (_) {}
   }
 
+  /// Records that KYC was submitted and is pending review, without falsely marking as verified.
+  Future<void> submitKycPending() async {
+    state = state.copyWith(
+      isKycVerified: false,
+      isOnboarded: true,
+      hasSkippedKyc: false,
+    );
+
+    try {
+      final String? userJson = await _storage.getUserData();
+      Map<String, dynamic> userData = <String, dynamic>{};
+      if (userJson != null && userJson.trim().isNotEmpty) {
+        try {
+          userData = jsonDecode(userJson) as Map<String, dynamic>;
+        } catch (_) {}
+      }
+      userData['isOnboarded'] = true;
+      userData['hasSkippedKyc'] = false;
+      userData['kyc'] = <String, dynamic>{
+        'isVerified': false,
+        'status': 'PENDING',
+      };
+      await _storage.saveUserData(jsonEncode(userData));
+    } catch (_) {}
+  }
+
+  /// Synchronizes the KYC verification boolean with the authoritative backend result.
+  void updateKycStatus(bool isVerified) {
+    if (state.isKycVerified != isVerified) {
+      state = state.copyWith(isKycVerified: isVerified);
+    }
+  }
+
   /// Allows the patron to skip KYC for now to explore gold schemes & jewellery,
   /// preserving their pending statutory compliance status.
   Future<void> skipKyc() async {

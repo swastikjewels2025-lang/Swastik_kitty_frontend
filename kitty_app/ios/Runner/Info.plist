@@ -48,6 +48,10 @@
 	<string>Swastik Kitty App uses Face ID for secure authentication and biometric login.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Swastik Kitty App requires access to your photo library to select KYC documents for verification.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Swastik Kitty App needs your location to fetch the doorstep cash pickup address accurately.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Swastik Kitty App uses your location to assist store agents with doorstep cash collection.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

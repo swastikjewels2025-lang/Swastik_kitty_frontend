@@ -412,7 +412,7 @@ class _KycScreenState extends ConsumerState<KycScreen>
       return KycPendingView(
         result: state.kycResult,
         onReturnHome: () async {
-          await ref.read(appAuthStateProvider.notifier).completeKyc();
+          await ref.read(appAuthStateProvider.notifier).submitKycPending();
           if (mounted) {
             context.go(RoutePaths.postKycChoice);
           }

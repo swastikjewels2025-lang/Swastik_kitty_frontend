@@ -9,6 +9,9 @@ import 'package:intl/intl.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 import '../../../../core/routing/route_paths.dart';
 import '../../../../shared/widgets/dialogs/edit_profile_dialog.dart';
+import '../../../dashboard/presentation/providers/dashboard_controller.dart';
+import '../../../kyc/presentation/providers/kyc_controller.dart';
+import '../../../kyc/presentation/providers/kyc_state.dart';
 import '../../../live_rates/presentation/providers/live_rate_controller.dart';
 import '../../../live_rates/presentation/providers/live_rate_state.dart';
 
@@ -75,6 +78,11 @@ class _KittyMenuSheetState extends ConsumerState<KittyMenuSheet>
     _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(kycControllerProvider.notifier).loadKycStatus();
+      ref.read(dashboardControllerProvider.notifier).loadDashboard();
+    });
   }
 
   @override
@@ -426,16 +434,28 @@ class _KittyMenuSheetState extends ConsumerState<KittyMenuSheet>
                   child: Column(
                     children: <Widget>[
                       // 1. My Gold Plans
-                      _buildMenuItem(
-                        iconWidget: const Icon(
-                          Icons.assignment_outlined,
-                          size: 21,
-                          color: _textDark,
-                        ),
-                        iconBg: _itemBg,
-                        title: 'My Gold Plans',
-                        subtitle: '1 Active Plan',
-                        onTap: () => _navigate(RoutePaths.dashboard),
+                      Builder(
+                        builder: (BuildContext context) {
+                          final dashState = ref.watch(dashboardControllerProvider);
+                          final int plansCount = dashState.schemes.isNotEmpty
+                              ? dashState.schemes.length
+                              : (dashState.data != null ? 1 : 0);
+                          final String sub = plansCount == 0
+                              ? 'Explore gold schemes'
+                              : (plansCount == 1 ? '1 Active Plan' : '$plansCount Active Plans');
+
+                          return _buildMenuItem(
+                            iconWidget: const Icon(
+                              Icons.assignment_outlined,
+                              size: 21,
+                              color: _textDark,
+                            ),
+                            iconBg: _itemBg,
+                            title: 'My Gold Plans',
+                            subtitle: sub,
+                            onTap: () => _navigate(RoutePaths.dashboard),
+                          );
+                        },
                       ),
 
                       // 2. My Bookings
@@ -558,35 +578,66 @@ class _KittyMenuSheetState extends ConsumerState<KittyMenuSheet>
                       ),
 
                       // 6. KYC Details
-                      _buildMenuItem(
-                        iconWidget: const Icon(
-                          Icons.badge_outlined,
-                          size: 21,
-                          color: _textDark,
-                        ),
-                        iconBg: _itemBg,
-                        title: 'KYC Details',
-                        titleBadge: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFFA7F3D0),
-                              width: 1.0,
+                      Builder(
+                        builder: (BuildContext context) {
+                          final kycState = ref.watch(kycControllerProvider);
+                          final bool isVerified = kycState.status == KycFormStatus.verified ||
+                              (kycState.status != KycFormStatus.pending &&
+                               kycState.status != KycFormStatus.rejected &&
+                               kycState.status != KycFormStatus.notSubmitted &&
+                               authState.isKycVerified);
+                          final bool isPending = kycState.status == KycFormStatus.pending;
+                          final bool isRejected = kycState.status == KycFormStatus.rejected;
+
+                          final String badgeText = isVerified
+                              ? 'Verified'
+                              : (isPending ? 'Under Review' : (isRejected ? 'Action Required' : 'Unverified'));
+
+                          final Color badgeBg = isVerified
+                              ? const Color(0xFFECFDF5)
+                              : (isPending ? const Color(0xFFFEF3C7) : const Color(0xFFFFF1F2));
+
+                          final Color badgeBorder = isVerified
+                              ? const Color(0xFFA7F3D0)
+                              : (isPending ? const Color(0xFFFDE68A) : const Color(0xFFFECDD3));
+
+                          final Color badgeTextCol = isVerified
+                              ? const Color(0xFF047857)
+                              : (isPending ? const Color(0xFFB45309) : const Color(0xFFBE123C));
+
+                          return _buildMenuItem(
+                            iconWidget: const Icon(
+                              Icons.badge_outlined,
+                              size: 21,
+                              color: _textDark,
                             ),
-                          ),
-                          child: Text(
-                            authState.isKycVerified ? 'Verified' : 'Pending',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF047857),
+                            iconBg: _itemBg,
+                            title: 'KYC Details',
+                            titleBadge: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: badgeBg,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: badgeBorder,
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Text(
+                                badgeText,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: badgeTextCol,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        subtitle: 'Manage your account verification',
-                        onTap: () => _navigate(RoutePaths.kyc),
+                            subtitle: isVerified
+                                ? 'Account fully verified'
+                                : (isPending ? 'Verification under review' : 'Manage your verification'),
+                            onTap: () => _navigate(RoutePaths.kyc),
+                          );
+                        },
                       ),
 
                       // 7. Logout Action

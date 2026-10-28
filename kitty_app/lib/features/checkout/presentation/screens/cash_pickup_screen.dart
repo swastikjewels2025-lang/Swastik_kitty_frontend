@@ -1,8 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/providers/auth_state_provider.dart';
@@ -59,6 +62,8 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
   String _selectedTimeSlot = 'Morning (10:00 AM - 01:00 PM)';
   bool _isScheduled = false;
   bool _isSubmitting = false;
+  bool _isDetectingLocation = false;
+  String? _selectedMembershipId;
   String _generatedOtp = '1234';
   String _generatedRequestId = 'PCK-SW-0001';
 
@@ -90,6 +95,11 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
     _amountController = TextEditingController(
       text: initialAmount > 0 ? initialAmount.toString() : '',
     );
+
+    // Refresh active memberships on appearance
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(dashboardControllerProvider.notifier).loadDashboard();
+    });
   }
 
   @override
@@ -105,9 +115,175 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
     super.dispose();
   }
 
+  /// Automatically detects patron GPS location and auto-populates pickup address
+  Future<void> _fetchCurrentLocation() async {
+    if (_isDetectingLocation) return;
+    setState(() => _isDetectingLocation = true);
+
+    try {
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location services are turned off. Please turn on GPS in your device settings.'),
+            backgroundColor: Color(0xFF063B2C),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permission denied. You can manually enter your pickup address.'),
+              backgroundColor: Color(0xFF063B2C),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permission is permanently denied. You can manually type your address.'),
+            backgroundColor: Color(0xFF063B2C),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 12),
+        ),
+      );
+
+      // Reverse geocode coordinates using OpenStreetMap Nominatim
+      try {
+        final Dio geoDio = Dio();
+        final response = await geoDio.get<Map<String, dynamic>>(
+          'https://nominatim.openstreetmap.org/reverse',
+          queryParameters: <String, dynamic>{
+            'format': 'json',
+            'lat': position.latitude,
+            'lon': position.longitude,
+          },
+          options: Options(headers: <String, String>{'User-Agent': 'SwastikKittyApp/1.0'}),
+        );
+
+        final addressData = response.data?['address'] as Map<String, dynamic>?;
+        if (addressData != null) {
+          final String road = addressData['road']?.toString() ??
+              addressData['suburb']?.toString() ??
+              addressData['neighbourhood']?.toString() ??
+              '';
+          final String city = addressData['city']?.toString() ??
+              addressData['town']?.toString() ??
+              addressData['state_district']?.toString() ??
+              addressData['state']?.toString() ??
+              '';
+          final String postcode = addressData['postcode']?.toString() ?? '';
+
+          if (road.isNotEmpty) _areaController.text = road;
+          if (city.isNotEmpty) _cityController.text = city;
+          if (postcode.isNotEmpty) _pincodeController.text = postcode;
+          if (_address1Controller.text.isEmpty) {
+            _address1Controller.text = 'Near $road';
+          }
+        }
+      } catch (_) {
+        if (_areaController.text.isEmpty) {
+          _areaController.text = 'Near Coordinates (${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)})';
+        }
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Location detected successfully (Lat: ${position.latitude.toStringAsFixed(3)}, Lon: ${position.longitude.toStringAsFixed(3)})'),
+          backgroundColor: const Color(0xFF063B2C),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not fetch GPS location: $e. You can type your address below.'),
+          backgroundColor: const Color(0xFF063B2C),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isDetectingLocation = false);
+    }
+  }
+
+  /// Opens pickup query in Google Maps so patron can verify/adjust location pin
+  Future<void> _openGoogleMaps() async {
+    final String query = <String>[
+      _address1Controller.text.trim(),
+      _areaController.text.trim(),
+      _cityController.text.trim(),
+      _pincodeController.text.trim(),
+    ].where((String s) => s.isNotEmpty).join(', ');
+
+    final Uri url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query.isNotEmpty ? query : 'Swastik Jewellers')}',
+    );
+
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to launch Google Maps.'),
+          backgroundColor: Color(0xFF063B2C),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) return;
+
+    final dashboardState = ref.read(dashboardControllerProvider);
+    final DashboardSummaryEntity? scheme = dashboardState.selectedScheme ??
+        (dashboardState.schemes.isNotEmpty ? dashboardState.schemes.first : dashboardState.data);
+
+    final String membershipId = widget.membershipId?.isNotEmpty == true
+        ? widget.membershipId!
+        : (_selectedMembershipId ?? scheme?.membershipId ?? '');
+
+    if (membershipId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Active Gold Savings Plan required to schedule cash pickup. Please enroll in a scheme first.'),
+          backgroundColor: const Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'View Plans',
+            textColor: Colors.white,
+            onPressed: () => context.push(RoutePaths.offers),
+          ),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _isSubmitting = true;
@@ -115,9 +291,6 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
 
     try {
       final DioClient dio = ref.read(dioClientProvider);
-      final dashboardState = ref.read(dashboardControllerProvider);
-      final DashboardSummaryEntity? scheme = dashboardState.selectedScheme ??
-          (dashboardState.schemes.isNotEmpty ? dashboardState.schemes.first : dashboardState.data);
 
       final String fullAddress = <String>[
         _address1Controller.text.trim(),
@@ -131,14 +304,10 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
           scheme?.customMonthlyEmi ??
           5000;
 
-      final String membershipId = widget.membershipId?.isNotEmpty == true
-          ? widget.membershipId!
-          : (scheme?.membershipId ?? '');
-
       final int targetMonth = widget.monthFor ?? ((scheme?.monthsPaid ?? 0) + 1);
 
       final Map<String, dynamic> payload = <String, dynamic>{
-        if (membershipId.isNotEmpty) 'membershipId': membershipId,
+        'membershipId': membershipId,
         'months': <int>[targetMonth],
         'amount': parsedAmount,
         'pickupAddress': fullAddress,
@@ -180,10 +349,23 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
         setState(() {
           _isSubmitting = false;
         });
+
+        String userError = 'Unable to schedule pickup. Please check your active gold plan.';
+        if (e is DioException) {
+          final resData = e.response?.data;
+          if (resData is Map) {
+            if (resData['message'] != null) {
+              userError = resData['message'].toString();
+            } else if (resData['error'] is Map && resData['error']['message'] != null) {
+              userError = resData['error']['message'].toString();
+            }
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to schedule pickup: $e'),
-            backgroundColor: Colors.red.shade800,
+            content: Text(userError),
+            backgroundColor: const Color(0xFFDC2626),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -263,11 +445,163 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
   }
 
   Widget _buildFormView() {
+    final dashboardState = ref.watch(dashboardControllerProvider);
+    final List<DashboardSummaryEntity> activeSchemes = dashboardState.schemes;
+    final bool hasActiveMembership = widget.membershipId?.isNotEmpty == true ||
+        activeSchemes.isNotEmpty ||
+        (dashboardState.data?.membershipId?.isNotEmpty ?? false);
+
+    final DashboardSummaryEntity? currentScheme = activeSchemes.isNotEmpty
+        ? activeSchemes.firstWhere(
+            (s) => s.membershipId == (_selectedMembershipId ?? widget.membershipId),
+            orElse: () => activeSchemes.first,
+          )
+        : (dashboardState.selectedScheme ?? dashboardState.data);
+
+    final String planDisplayName = widget.planTitle.isNotEmpty &&
+            widget.planTitle != '11 Month Gold Plan' &&
+            widget.planTitle != 'Gold Savings Plan'
+        ? widget.planTitle
+        : (currentScheme?.schemeName ?? 'Gold Savings Plan');
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          if (!hasActiveMembership) ...<Widget>[
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFCA5A5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Row(
+                    children: <Widget>[
+                      Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 22),
+                      SizedBox(width: 8),
+                      Text(
+                        'No Active Gold Plan Enrolled',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF991B1B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Doorstep cash collection is exclusively available for paying monthly installments of an active gold plan. Please enroll in a plan first.',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 12,
+                      color: Color(0xFF7F1D1D),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push(RoutePaths.offers),
+                      icon: const Icon(Icons.explore_outlined, size: 16, color: Colors.white),
+                      label: const Text(
+                        'Explore & Enroll in Gold Plan',
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF063B2C),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          if (activeSchemes.length > 1) ...<Widget>[
+            Container(
+              padding: const EdgeInsets.all(14),
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFEFE8DD)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'SELECT GOLD PLAN FOR CASH PICKUP',
+                    style: TextStyle(
+                      fontFamily: 'Plus Jakarta Sans',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: Color(0xFF78716C),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedMembershipId ?? activeSchemes.first.membershipId,
+                    items: activeSchemes.map((s) {
+                      final String tokenLabel = s.chitToken?.isNotEmpty == true ? ' (${s.chitToken})' : '';
+                      final int emi = s.nextInstallment?.amount ?? s.customMonthlyEmi ?? 5000;
+                      return DropdownMenuItem<String>(
+                        value: s.membershipId,
+                        child: Text(
+                          '${s.schemeName}$tokenLabel - ₹$emi/mo',
+                          style: const TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1C1917),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedMembershipId = val;
+                          final selected = activeSchemes.firstWhere((s) => s.membershipId == val);
+                          final amt = selected.nextInstallment?.amount ?? selected.customMonthlyEmi ?? 5000;
+                          _amountController.text = amt.toString();
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFFFAF7F2),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFFE7E5E4)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFFE7E5E4)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // Plan & Amount Preview Card
           Container(
             padding: const EdgeInsets.all(16),
@@ -324,11 +658,7 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              (widget.planTitle.isNotEmpty && widget.planTitle != '11 Month Gold Plan' && widget.planTitle != 'Gold Savings Plan')
-                                  ? widget.planTitle
-                                  : (ref.watch(dashboardControllerProvider).selectedScheme?.schemeName ??
-                                      ref.watch(dashboardControllerProvider).data?.schemeName ??
-                                      'Gold Savings Plan'),
+                              planDisplayName,
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -482,8 +812,71 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
           // Pickup Location
           _buildCardSection(
             title: 'PICKUP LOCATION',
+            action: _isDetectingLocation
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF063B2C)),
+                  )
+                : null,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+                // Location Action Buttons Row
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isDetectingLocation ? null : _fetchCurrentLocation,
+                        icon: _isDetectingLocation
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF063B2C)),
+                              )
+                            : const Icon(Icons.my_location_rounded, size: 16, color: Color(0xFF063B2C)),
+                        label: Text(
+                          _isDetectingLocation ? 'Locating...' : 'Fetch GPS',
+                          style: const TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF063B2C),
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF063B2C)),
+                          backgroundColor: const Color(0xFFE6F4F0).withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _openGoogleMaps,
+                        icon: const Icon(Icons.map_rounded, size: 16, color: Color(0xFFC88A35)),
+                        label: const Text(
+                          'Google Maps',
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFC88A35),
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFC88A35)),
+                          backgroundColor: const Color(0xFFFAF5EC),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 _buildInputField(
                   label: 'Flat / House No. / Building Name *',
                   controller: _address1Controller,
@@ -607,9 +1000,26 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _handleSubmit,
+              onPressed: _isSubmitting
+                  ? null
+                  : (!hasActiveMembership
+                      ? () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Active Gold Savings Plan required to schedule cash pickup. Please enroll in a scheme first.'),
+                              backgroundColor: const Color(0xFFDC2626),
+                              behavior: SnackBarBehavior.floating,
+                              action: SnackBarAction(
+                                label: 'Explore Plans',
+                                textColor: Colors.white,
+                                onPressed: () => context.push(RoutePaths.offers),
+                              ),
+                            ),
+                          );
+                        }
+                      : _handleSubmit),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF063B2C),
+                backgroundColor: hasActiveMembership ? const Color(0xFF063B2C) : const Color(0xFF78716C),
                 foregroundColor: Colors.white,
                 elevation: 3,
                 shadowColor: const Color(0x33063B2C),
@@ -626,9 +1036,9 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                         strokeWidth: 2.5,
                       ),
                     )
-                  : const Text(
-                      'Schedule Pickup & Get OTP',
-                      style: TextStyle(
+                  : Text(
+                      hasActiveMembership ? 'Schedule Pickup & Get OTP' : 'Enroll in a Plan to Schedule Pickup',
+                      style: const TextStyle(
                         fontFamily: 'Plus Jakarta Sans',
                         fontSize: 15.5,
                         fontWeight: FontWeight.w700,
@@ -1017,7 +1427,7 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
     );
   }
 
-  Widget _buildCardSection({required String title, required Widget child}) {
+  Widget _buildCardSection({required String title, required Widget child, Widget? action}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1035,15 +1445,21 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: Color(0xFF78716C),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  color: Color(0xFF78716C),
+                ),
+              ),
+              ?action,
+            ],
           ),
           const SizedBox(height: 10),
           child,

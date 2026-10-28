@@ -948,13 +948,21 @@ class _RegisterProfileScreenState
                       placeholder: 'Enter nominee mobile number',
                       controller: _nomineePhoneController,
                       keyboardType: TextInputType.phone,
+                      onChanged: (_) => setState(() {}),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                       validator: (String? value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter nominee phone number';
                         }
                         final String digits = value.replaceAll(RegExp(r'\D'), '');
-                        if (digits.length < 10) {
-                          return 'Please enter a valid 10-digit mobile number';
+                        if (digits.length != 10) {
+                          return 'Nominee mobile number must be exactly 10 digits';
+                        }
+                        if (!RegExp(r'^[6-9]\d{9}$').hasMatch(digits)) {
+                          return 'Please enter a valid Indian mobile number starting with 6, 7, 8, or 9';
                         }
                         return null;
                       },
@@ -964,6 +972,67 @@ class _RegisterProfileScreenState
               ),
             ),
           ),
+
+          // Real-time Nominee Phone Warning / Validation Message
+          if (_nomineePhoneController.text.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Builder(
+                builder: (BuildContext context) {
+                  final String text = _nomineePhoneController.text.trim();
+                  final bool startsValid = text.isNotEmpty && RegExp(r'^[6-9]').hasMatch(text);
+                  final bool isFullValid = text.length == 10 && startsValid;
+
+                  if (isFullValid) {
+                    return Row(
+                      children: <Widget>[
+                        const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF047857)),
+                        const SizedBox(width: 5),
+                        Text(
+                          'Valid 10-digit mobile number',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF047857),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  final String warnMsg = !startsValid
+                      ? 'Mobile number must start with 6, 7, 8, or 9'
+                      : 'Please enter complete 10-digit number (${text.length}/10 digits entered)';
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Icon(Icons.warning_amber_rounded, size: 15, color: Color(0xFFB45309)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            warnMsg,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFB45309),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
 
           const SizedBox(height: 18),
 
@@ -1156,6 +1225,7 @@ class _RegisterProfileScreenState
     bool readOnly = false,
     bool compact = false,
     List<TextInputFormatter>? inputFormatters,
+    ValueChanged<String>? onChanged,
   }) {
     return TextFormField(
       key: fieldKey,
@@ -1165,6 +1235,7 @@ class _RegisterProfileScreenState
       validator: validator,
       readOnly: readOnly,
       onTap: onTap,
+      onChanged: onChanged,
       style: GoogleFonts.plusJakartaSans(
         fontSize: compact ? 13.5 : 14.5,
         fontWeight: FontWeight.w600,

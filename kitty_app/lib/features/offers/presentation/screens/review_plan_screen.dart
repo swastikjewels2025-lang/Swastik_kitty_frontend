@@ -8,6 +8,7 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/providers/auth_state_provider.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/routing/route_paths.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../checkout/presentation/screens/checkout_screen.dart';
 import '../../../dashboard/presentation/providers/dashboard_controller.dart';
 import '../../../home/presentation/providers/home_controller.dart';
@@ -32,6 +33,7 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
   int _totalAmount = 30000;
   int _durationMonths = 6;
   String _selectedSlot = '01';
+  List<String> _selectedSlots = <String>['01'];
   bool _isSubmitting = false;
 
   @override
@@ -45,9 +47,16 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
       _totalAmount = schemeArg.targetAmount;
       _durationMonths = schemeArg.durationMonths;
     }
-    final dynamic slotArg = widget.args?['selectedSlot'];
-    if (slotArg is String && slotArg.isNotEmpty) {
-      _selectedSlot = slotArg;
+    final dynamic slotsArg = widget.args?['selectedSlots'];
+    if (slotsArg is List && slotsArg.isNotEmpty) {
+      _selectedSlots = slotsArg.map((e) => e.toString().padLeft(2, '0')).toList();
+      _selectedSlot = _selectedSlots.first;
+    } else {
+      final dynamic slotArg = widget.args?['selectedSlot'];
+      if (slotArg is String && slotArg.isNotEmpty) {
+        _selectedSlot = slotArg;
+        _selectedSlots = <String>[slotArg];
+      }
     }
   }
 
@@ -237,25 +246,31 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
         }
       }
 
-      final int slotNumber = int.tryParse(_selectedSlot) ?? 1;
+      final List<int> slotNumbers = _selectedSlots.map((s) => int.tryParse(s) ?? 1).toList();
+      final int effectiveMonthly = _monthlyAmount * _selectedSlots.length;
 
-      // 1. Join Scheme in backend MongoDB
+      // 1. Join Scheme in backend MongoDB with multi-slot support
       String membershipId = '';
-      String chitToken = '#SW-${_selectedSlot.padLeft(3, '0')}';
+      String chitToken = _selectedSlots.length > 1
+          ? '${_selectedSlots.length} Chits (${_selectedSlots.map((s) => "#SW-${s.padLeft(3, '0')}").join(', ')})'
+          : '#SW-${_selectedSlot.padLeft(3, '0')}';
 
       try {
         final response = await dio.post<Map<String, dynamic>>(
           '/api/v1/memberships/join',
           data: <String, dynamic>{
             'schemeId': schemeId,
-            'selectedNumber': slotNumber,
+            'selectedNumbers': slotNumbers,
+            'selectedNumber': slotNumbers.first,
           },
         );
 
         final dynamic mem = response.data?['data']?['membership'];
         if (mem is Map<String, dynamic>) {
           membershipId = mem['id']?.toString() ?? mem['_id']?.toString() ?? '';
-          chitToken = mem['chitToken']?.toString() ?? chitToken;
+          if (_selectedSlots.length == 1) {
+            chitToken = mem['chitToken']?.toString() ?? chitToken;
+          }
         }
       } catch (err) {
         // If already enrolled in this scheme, fetch existing active dashboard
@@ -263,7 +278,9 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
         final dashData = dashRes.data?['data']?['dashboard'] as Map<String, dynamic>?;
         if (dashData != null) {
           membershipId = dashData['membershipId']?.toString() ?? '';
-          chitToken = dashData['chitToken']?.toString() ?? chitToken;
+          if (_selectedSlots.length == 1) {
+            chitToken = dashData['chitToken']?.toString() ?? chitToken;
+          }
         }
       }
 
@@ -280,7 +297,7 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
           membershipId: membershipId.isNotEmpty ? membershipId : 'mem_${DateTime.now().millisecondsSinceEpoch}',
           chitToken: chitToken,
           monthFor: 1,
-          amount: _monthlyAmount,
+          amount: effectiveMonthly,
         ),
       );
     } catch (e) {
@@ -453,12 +470,34 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                           const Divider(color: Color(0xFFF5EFE7), height: 1),
                           const SizedBox(height: 10),
 
-                          _buildDetailRow('Allocated Chit Slot', '#$_selectedSlot'),
-                          _buildDetailRow('Monthly Installment', '₹$_monthlyAmount'),
-                          _buildDetailRow('Total Target Contribution', '₹$_totalAmount'),
-                          _buildDetailRow('Duration', '$_durationMonths Months'),
-                          _buildDetailRow('Installments Count', '$_durationMonths'),
-                          _buildDetailRow('Bonus Eligibility', 'Guaranteed bonus on completion'),
+                          Builder(
+                            builder: (BuildContext context) {
+                              final int slotCount = _selectedSlots.length;
+                              final int effectiveMonthly = _monthlyAmount * slotCount;
+                              final int effectiveTotal = _totalAmount * slotCount;
+                              final String slotsText = _selectedSlots.map((s) => '#$s').join(', ');
+
+                              return Column(
+                                children: <Widget>[
+                                  _buildDetailRow(
+                                    slotCount > 1 ? 'Allocated Chit Slots ($slotCount)' : 'Allocated Chit Slot',
+                                    slotsText,
+                                  ),
+                                  _buildDetailRow(
+                                    'Monthly Installment',
+                                    '${CurrencyFormatter.formatRupees(effectiveMonthly)}${slotCount > 1 ? ' ($slotCount x ${CurrencyFormatter.formatRupees(_monthlyAmount)})' : ''}',
+                                  ),
+                                  _buildDetailRow(
+                                    'Total Target Contribution',
+                                    CurrencyFormatter.formatRupees(effectiveTotal),
+                                  ),
+                                  _buildDetailRow('Duration', '$_durationMonths Months'),
+                                  _buildDetailRow('Installments Count', '$_durationMonths'),
+                                  _buildDetailRow('Bonus Eligibility', 'Guaranteed bonus on completion'),
+                                ],
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),

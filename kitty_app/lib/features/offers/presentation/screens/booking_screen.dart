@@ -27,7 +27,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   SchemeEntity? _activeScheme;
   int _totalSlots = 50;
   Set<String> _bookedNumbers = <String>{};
-  String? _selectedNumber;
+  final Set<String> _selectedNumbers = <String>{};
   bool _isLoadingSlots = true;
   String? _errorMessage;
 
@@ -103,14 +103,16 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       }
 
       // Auto-select first available slot if none selected
-      if (_selectedNumber == null || _bookedNumbers.contains(_selectedNumber)) {
+      if (_selectedNumbers.isEmpty) {
         for (int i = 1; i <= _totalSlots; i++) {
           final String numStr = i.toString().padLeft(2, '0');
           if (!_bookedNumbers.contains(numStr)) {
-            _selectedNumber = numStr;
+            _selectedNumbers.add(numStr);
             break;
           }
         }
+      } else {
+        _selectedNumbers.removeWhere((s) => _bookedNumbers.contains(s));
       }
     } catch (e) {
       _errorMessage = 'Unable to fetch live seat numbers. Tap to retry.';
@@ -124,37 +126,52 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   void _selectNumber(String numStr) {
     if (_bookedNumbers.contains(numStr)) return;
     setState(() {
-      if (_selectedNumber == numStr) {
-        _selectedNumber = null;
+      if (_selectedNumbers.contains(numStr)) {
+        _selectedNumbers.remove(numStr);
       } else {
-        _selectedNumber = numStr;
+        if (_selectedNumbers.length >= 10) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You can select a maximum of 10 slots per plan enrollment.'),
+              backgroundColor: Color(0xFF063B2C),
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+        _selectedNumbers.add(numStr);
       }
     });
   }
 
   void _clearSelection() {
     setState(() {
-      _selectedNumber = null;
+      _selectedNumbers.clear();
     });
   }
 
   void _handleBookNumber() {
-    if (_selectedNumber == null) {
+    if (_selectedNumbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select an available chit number'),
+          content: Text('Please select at least one available chit slot'),
           backgroundColor: Color(0xFF063B2C),
           behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
-    // Navigate to Review Your Plan with real scheme & chosen number
+    final List<String> sortedSlots = _selectedNumbers.toList()
+      ..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
+
+    // Navigate to Review Your Plan with real scheme & chosen numbers
     context.push(
       RoutePaths.review,
       extra: <String, dynamic>{
         'scheme': _activeScheme,
-        'selectedSlot': _selectedNumber,
+        'selectedSlots': sortedSlots,
+        'selectedSlot': sortedSlots.first,
       },
     );
   }
@@ -365,7 +382,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                           itemBuilder: (BuildContext context, int index) {
                             final String numStr = (index + 1).toString().padLeft(2, '0');
                             final bool isBooked = _bookedNumbers.contains(numStr);
-                            final bool isSelected = _selectedNumber == numStr;
+                            final bool isSelected = _selectedNumbers.contains(numStr);
 
                             Color bgColor;
                             Color textColor;
@@ -423,137 +440,155 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       const SizedBox(height: 16),
 
                       // Selected Number Bar
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Text(
-                            _selectedNumber != null
-                                ? 'Selected Slot: #$_selectedNumber'
-                                : 'Select An Available Slot',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1C1917),
-                            ),
-                          ),
-                          if (_selectedNumber != null)
-                            GestureDetector(
-                              onTap: _clearSelection,
-                              child: const Row(
+                      Builder(
+                        builder: (BuildContext context) {
+                          final List<String> sortedSlots = _selectedNumbers.toList()
+                            ..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
+                          final int count = sortedSlots.length;
+                          final int totalMonthly = monthlyAmount * (count > 0 ? count : 1);
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
-                                  Icon(
-                                    Icons.close_rounded,
-                                    size: 16,
-                                    color: Color(0xFFE03B24),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Clear',
-                                    style: TextStyle(
-                                      fontFamily: 'Plus Jakarta Sans',
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFFE03B24),
+                                  Expanded(
+                                    child: Text(
+                                      count > 0
+                                          ? 'Selected ($count/10): ${sortedSlots.map((s) => '#$s').join(', ')}'
+                                          : 'Select 1 to 10 Available Slots',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF1C1917),
+                                      ),
                                     ),
                                   ),
+                                  if (count > 0)
+                                    GestureDetector(
+                                      onTap: _clearSelection,
+                                      child: const Row(
+                                        children: <Widget>[
+                                          Icon(
+                                            Icons.close_rounded,
+                                            size: 16,
+                                            color: Color(0xFFE03B24),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Clear',
+                                            style: TextStyle(
+                                              fontFamily: 'Plus Jakarta Sans',
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFFE03B24),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
-                            ),
-                        ],
-                      ),
-
-                      if (_selectedNumber != null) ...<Widget>[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFA7F3D0)),
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              const Icon(Icons.check_circle_rounded, color: Color(0xFF047857), size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Chit Token #$_selectedNumber is reserved for your enrollment.',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF065F46),
+                              if (count > 0) ...<Widget>[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFECFDF5),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: const Color(0xFFA7F3D0)),
                                   ),
+                                  child: Row(
+                                    children: <Widget>[
+                                      const Icon(Icons.check_circle_rounded, color: Color(0xFF047857), size: 18),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          count == 1
+                                              ? 'Chit Token #${sortedSlots.first} is reserved for your enrollment.'
+                                              : '$count Chit Tokens (${sortedSlots.map((s) => '#$s').join(', ')}) reserved for your enrollment.',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF065F46),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 20),
+
+                              // Booking CTA Card
+                              Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: const Color(0xFFEADBCA)),
+                                  boxShadow: const <BoxShadow>[
+                                    BoxShadow(
+                                      color: Color(0x0A000000),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Enroll in Scheme',
+                                      style: GoogleFonts.playfairDisplay(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF1C1917),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      count > 0
+                                          ? 'Lock in $count Token${count > 1 ? 's' : ''} (${sortedSlots.map((s) => '#$s').join(', ')}) • Total: ${CurrencyFormatter.formatRupees(totalMonthly)}/mo'
+                                          : 'Select between 1 and 10 chit slots to review installment breakdown.',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 12.5,
+                                        color: const Color(0xFF78716C),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 50,
+                                      child: ElevatedButton(
+                                        onPressed: count == 0 ? null : _handleBookNumber,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF063B2C),
+                                          foregroundColor: Colors.white,
+                                          disabledBackgroundColor: const Color(0xFFDCD7CF),
+                                          elevation: 2,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(25),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          count > 0
+                                              ? 'Review Plan with $count Slot${count > 1 ? 's' : ''} →'
+                                              : 'Select 1 to 10 Slots to Continue',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 20),
-
-                      // Booking CTA Card
-                      Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFEADBCA)),
-                          boxShadow: const <BoxShadow>[
-                            BoxShadow(
-                              color: Color(0x0A000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'Enroll in Scheme',
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1C1917),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Lock in Token #${_selectedNumber ?? '--'} and review installment breakdown.',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12.5,
-                                color: const Color(0xFF78716C),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 50,
-                              child: ElevatedButton(
-                                onPressed: _selectedNumber == null ? null : _handleBookNumber,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF063B2C),
-                                  foregroundColor: Colors.white,
-                                  disabledBackgroundColor: const Color(0xFFDCD7CF),
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                ),
-                                child: Text(
-                                  _selectedNumber != null
-                                      ? 'Review Plan with Slot #$_selectedNumber →'
-                                      : 'Select a Slot to Continue',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 32),
