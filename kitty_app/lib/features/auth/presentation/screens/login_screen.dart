@@ -1872,7 +1872,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
             cursorColor: const Color(0xFF063B2C),
             decoration: InputDecoration(
-              hintText: 'e.g. Rihan Saifi',
+              hintText: 'e.g. Rahul Sharma',
               hintStyle: GoogleFonts.plusJakartaSans(
                 fontSize: 14.0,
                 color: const Color(0xFF9CA3AF),

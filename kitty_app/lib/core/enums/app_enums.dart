@@ -331,12 +331,15 @@ enum NotificationTypeEnum {
     switch (clean) {
       case 'TRANSACTION':
       case 'PAYMENT':
+      case 'EMI_DUE':
         return NotificationTypeEnum.transaction;
       case 'SCHEME':
+      case 'WINNER_ALERT':
         return NotificationTypeEnum.scheme;
       case 'OFFER':
         return NotificationTypeEnum.offer;
       case 'SYSTEM':
+      case 'GENERAL':
         return NotificationTypeEnum.system;
       default:
         return NotificationTypeEnum.unknown;

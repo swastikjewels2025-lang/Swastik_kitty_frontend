@@ -350,11 +350,17 @@ class AuthController extends Notifier<AuthFlowState> {
         debugPrint('[GoogleSignIn] Native dialog unconfigured/cancelled: $nativeError');
       }
 
-      // Seamless dev / testing fallback if OAuth client is not yet registered in console
-      idToken ??= 'dev_google_token_${DateTime.now().millisecondsSinceEpoch}';
-      email ??= 'patron.google@swastikjewel.in';
-      name ??= 'Google Patron';
-      googleId ??= 'google_id_${DateTime.now().millisecondsSinceEpoch}';
+      if (idToken == null) {
+        final bool useMock = ref.read(appConfigProvider).useMockApi;
+        if (!useMock) {
+          state = state.copyWith(isSubmitting: false);
+          return false;
+        }
+        idToken = 'dev_google_token_${DateTime.now().millisecondsSinceEpoch}';
+        email = 'patron.google@swastikjewel.in';
+        name = 'Google Patron';
+        googleId = 'google_id_${DateTime.now().millisecondsSinceEpoch}';
+      }
 
       final DioClient dio = ref.read(dioClientProvider);
       final response = await dio.post<Map<String, dynamic>>(
@@ -371,8 +377,8 @@ class AuthController extends Notifier<AuthFlowState> {
       final String token = data?['token']?.toString() ?? 'mock_token';
       final Map<String, dynamic>? user = data?['user'] as Map<String, dynamic>?;
 
-      final String userName = user?['name']?.toString() ?? name;
-      final String userEmail = user?['email']?.toString() ?? email;
+      final String userName = user?['name']?.toString() ?? name ?? 'Google Patron';
+      final String userEmail = user?['email']?.toString() ?? email ?? '';
       final String userPhone = user?['phone']?.toString() ?? '';
 
       final AuthSessionEntity session = AuthSessionEntity(
@@ -446,11 +452,17 @@ class AuthController extends Notifier<AuthFlowState> {
         debugPrint('[AppleSignIn] Native dialog unconfigured/cancelled: $nativeError');
       }
 
-      // Seamless dev / testing fallback if Apple Developer credentials are not yet linked
-      identityToken ??= 'dev_apple_token_${DateTime.now().millisecondsSinceEpoch}';
-      userIdentifier ??= 'apple_user_${DateTime.now().millisecondsSinceEpoch}';
-      email ??= 'patron.apple@privaterelay.appleid.com';
-      name ??= 'Apple Patron';
+      if (identityToken == null) {
+        final bool useMock = ref.read(appConfigProvider).useMockApi;
+        if (!useMock) {
+          state = state.copyWith(isSubmitting: false);
+          return false;
+        }
+        identityToken = 'dev_apple_token_${DateTime.now().millisecondsSinceEpoch}';
+        userIdentifier = 'apple_user_${DateTime.now().millisecondsSinceEpoch}';
+        email = 'patron.apple@privaterelay.appleid.com';
+        name = 'Apple Patron';
+      }
 
       final DioClient dio = ref.read(dioClientProvider);
       final response = await dio.post<Map<String, dynamic>>(
@@ -467,8 +479,8 @@ class AuthController extends Notifier<AuthFlowState> {
       final String token = data?['token']?.toString() ?? 'mock_token';
       final Map<String, dynamic>? user = data?['user'] as Map<String, dynamic>?;
 
-      final String userName = user?['name']?.toString() ?? name;
-      final String userEmail = user?['email']?.toString() ?? email;
+      final String userName = user?['name']?.toString() ?? name ?? 'Apple Patron';
+      final String userEmail = user?['email']?.toString() ?? email ?? '';
       final String userPhone = user?['phone']?.toString() ?? '';
 
       final AuthSessionEntity session = AuthSessionEntity(

@@ -129,7 +129,7 @@ class HomeActiveKittyCard extends StatelessWidget {
                           Row(
                             children: <Widget>[
                               Text(
-                                'Plan ID: ${dashboard.chitToken ?? "SJG08123"}',
+                                'Plan ID: ${dashboard.chitToken ?? "-"}',
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w500,

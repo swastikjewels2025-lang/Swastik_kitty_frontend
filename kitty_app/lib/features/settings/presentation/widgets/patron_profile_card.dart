@@ -17,7 +17,7 @@ class PatronProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String name = user?.name.isNotEmpty == true ? user!.name : 'Patron';
-    final String phone = user?.phone.isNotEmpty == true ? user!.phone : '+91 98765 43210';
+    final String phone = user?.phone.isNotEmpty == true ? user!.phone : 'Not provided';
     final String? email = user?.email;
     final String tier = user?.tier.isNotEmpty == true ? user!.tier : 'Tier 1 Verified Member';
     final bool isKycVerified = user?.kyc.isVerified == true;

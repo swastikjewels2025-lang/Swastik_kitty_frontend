@@ -140,15 +140,18 @@ class _KittyMenuSheetState extends ConsumerState<KittyMenuSheet>
     final double gold24k = rateState.data?.rate24k ?? 7485.0;
     final String formattedGold24k = NumberFormat('#,##,###').format(gold24k.round());
 
-    final String displayName = authState.userName.trim().isNotEmpty
+    final String displayName = (authState.userName.trim().isNotEmpty &&
+            authState.userName.trim() != 'Patron' &&
+            authState.userName.trim() != 'Rihan' &&
+            authState.userName.trim() != 'Mahak')
         ? authState.userName.trim()
-        : 'Mahak Garg';
+        : 'Swastik Patron';
     final String displayPhone = authState.userPhone.trim().isNotEmpty
         ? authState.userPhone.trim()
-        : '+91 98765 43210';
+        : 'Phone not linked';
     final String initialLetter = displayName.isNotEmpty
         ? displayName[0].toUpperCase()
-        : 'M';
+        : 'S';
 
     final double screenHeight = MediaQuery.of(context).size.height;
 

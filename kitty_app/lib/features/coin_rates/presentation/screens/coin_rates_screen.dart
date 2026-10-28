@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/providers/core_providers.dart';
 import '../../../../core/routing/route_paths.dart';
 import '../../../../shared/widgets/navigation/kitty_hamburger_button.dart';
 import '../../../live_rates/presentation/providers/live_rate_controller.dart';
@@ -121,10 +123,32 @@ class _CoinRatesScreenState extends ConsumerState<CoinRatesScreen> {
         purity: purity,
         weight: weight,
         totalAmount: totalAmount,
-        onConfirmed: () {
-          // Record order in real orders state
+        onConfirmed: () async {
+          final DioClient dio = ref.read(dioClientProvider);
+          String bookingId = 'COIN-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+          try {
+            final response = await dio.post<Map<String, dynamic>>(
+              '/api/v1/bookings',
+              data: <String, dynamic>{
+                'category': 'COINS',
+                'itemName': itemName,
+                'karat': purity,
+                'weightGrams': weight,
+                'unitPrice': totalAmount,
+                'quantity': 1,
+              },
+            );
+            final dynamic data = response.data?['data'];
+            if (data is Map && data['bookingId'] != null) {
+              bookingId = data['bookingId'].toString();
+            }
+          } catch (_) {
+            // Keep local booking if offline or mock
+          }
+
           final OrderBookingEntity booking = OrderBookingEntity(
-            id: 'COIN-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+            id: bookingId,
             title: itemName,
             category: OrderCategory.coins,
             description: '$weight Grams • $purity',
@@ -137,7 +161,11 @@ class _CoinRatesScreenState extends ConsumerState<CoinRatesScreen> {
 
           ref.read(ordersControllerProvider.notifier).addBooking(booking);
 
-          Navigator.of(ctx).pop();
+          if (ctx.mounted) {
+            Navigator.of(ctx).pop();
+          }
+
+          if (!mounted) return;
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

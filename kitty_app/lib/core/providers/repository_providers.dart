@@ -47,6 +47,7 @@ import '../../features/home/data/repositories/mock_product_repository.dart';
 // Notifications
 import '../../features/notifications/domain/repositories/i_notification_repository.dart';
 import '../../features/notifications/data/repositories/mock_notification_repository.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 
 // Receipt
 import '../../features/receipt/domain/repositories/i_receipt_repository.dart';
@@ -187,17 +188,20 @@ final Provider<IProductRepository> productRepositoryProvider =
 });
 
 /// In-app Notifications Repository Provider.
-/// NOTE: The backend has no in-app notification feed collection or REST endpoints.
-/// Notifications are dispatched externally via SMS OTP / WhatsApp (Phase 14 verified gap).
-/// Kept explicitly on mock to prevent 404s even when [useMockApi] is false.
+/// Connects to live backend GET /api/v1/notifications and admin broadcasts when useMockApi is false.
 final Provider<INotificationRepository> notificationRepositoryProvider =
     Provider<INotificationRepository>((Ref ref) {
-  final MockEngineConfig mockEngine = ref.watch(mockEngineConfigProvider);
-  final storage = ref.watch(secureStorageServiceProvider);
-  return MockNotificationRepository(
-    engineConfig: mockEngine,
-    storageService: storage,
-  );
+  final AppConfig config = ref.watch(appConfigProvider);
+  if (config.useMockApi) {
+    final MockEngineConfig mockEngine = ref.watch(mockEngineConfigProvider);
+    final storage = ref.watch(secureStorageServiceProvider);
+    return MockNotificationRepository(
+      engineConfig: mockEngine,
+      storageService: storage,
+    );
+  }
+  final DioClient dioClient = ref.watch(dioClientProvider);
+  return NotificationRepositoryImpl(apiClient: dioClient);
 });
 
 /// Payment Receipt Repository Provider.

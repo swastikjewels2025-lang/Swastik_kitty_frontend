@@ -89,27 +89,33 @@ class HomeScreen extends ConsumerWidget {
         : data?.activeKitty;
 
     // Resolve user display name
-    final String greetingName = auth.userName.isNotEmpty
+    final String greetingName = (auth.userName.isNotEmpty &&
+            auth.userName != 'Patron' &&
+            auth.userName != 'Rihan' &&
+            auth.userName != 'Mahak')
         ? auth.userName
-        : 'Mahak';
+        : 'Patron';
 
     // Resolve gold rate for 22KT
-    final double gold22kRate = data?.goldRate?.effectiveRate22k ?? 6450.0;
+    final double gold22kRate = data?.goldRate?.effectiveRate22k ?? 7485.0;
     final String gold22kFormatted = NumberFormat('#,##0', 'en_IN').format(gold22kRate.round());
 
     // Resolve active plan metrics
-    final int paidAmount = activeKitty?.totalPaidAmount ?? 55000;
-    final int totalPlanAmount = activeKitty?.targetAmount ?? 120000;
+    final bool hasActiveKitty = (activeKitty != null &&
+        activeKitty.hasActiveScheme &&
+        (activeKitty.targetAmount ?? 0) > 0);
+    final int paidAmount = activeKitty?.totalPaidAmount ?? 0;
+    final int totalPlanAmount = activeKitty?.targetAmount ?? 0;
     final int installmentAmount = activeKitty?.nextInstallment?.amount ?? activeKitty?.customMonthlyEmi ?? 5000;
     final double progressFraction = totalPlanAmount > 0
         ? (paidAmount / totalPlanAmount).clamp(0.0, 1.0)
-        : 0.45;
+        : 0.0;
     final int progressPercent = (progressFraction * 100).round();
-    final String planTitle = activeKitty?.schemeName ?? '11 Month Gold Plan';
-    final String planId = activeKitty?.chitToken ?? 'SJG08123';
+    final String planTitle = activeKitty?.schemeName ?? 'Gold Kitty Scheme';
+    final String planId = activeKitty?.chitToken ?? '-';
     final String nextDueText = activeKitty?.nextInstallment?.dueDate != null
         ? DateFormat('d MMM yyyy').format(activeKitty!.nextInstallment!.dueDate)
-        : '5 Oct 2026';
+        : 'Upcoming';
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF7F2),
@@ -389,15 +395,19 @@ class HomeScreen extends ConsumerWidget {
                             label: 'Pay\nInstallment',
                             iconSvg: 'assets/icons/pay-installment.svg',
                             onTap: () {
-                              context.push(
-                                RoutePaths.checkout,
-                                extra: CheckoutArgs(
-                                  membershipId: activeKitty?.membershipId ?? 'mem_994411',
-                                  chitToken: activeKitty?.chitToken ?? '#SW-042',
-                                  monthFor: activeKitty?.nextInstallment?.month ?? 1,
-                                  amount: installmentAmount,
-                                ),
-                              );
+                              if (hasActiveKitty) {
+                                context.push(
+                                  RoutePaths.checkout,
+                                  extra: CheckoutArgs(
+                                    membershipId: activeKitty.membershipId ?? '',
+                                    chitToken: activeKitty.chitToken ?? '',
+                                    monthFor: activeKitty.nextInstallment?.month ?? 1,
+                                    amount: installmentAmount,
+                                  ),
+                                );
+                              } else {
+                                context.go(RoutePaths.offers);
+                              }
                             },
                           ),
                           _buildQuickActionItem(
@@ -533,6 +543,7 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
 
                       // Active Plan Card (.plan-card)
+                      if (hasActiveKitty)
                       Container(
                         padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
                         decoration: BoxDecoration(
@@ -733,9 +744,9 @@ class HomeScreen extends ConsumerWidget {
                                       context.push(
                                         RoutePaths.checkout,
                                         extra: CheckoutArgs(
-                                          membershipId: activeKitty?.membershipId ?? 'mem_994411',
-                                          chitToken: activeKitty?.chitToken ?? '#SW-042',
-                                          monthFor: activeKitty?.nextInstallment?.month ?? 1,
+                                          membershipId: activeKitty.membershipId ?? '',
+                                          chitToken: activeKitty.chitToken ?? '',
+                                          monthFor: activeKitty.nextInstallment?.month ?? 1,
                                           amount: installmentAmount,
                                         ),
                                       );
@@ -777,6 +788,86 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      if (!hasActiveKitty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFEFEAE0)),
+                            boxShadow: const <BoxShadow>[
+                              BoxShadow(
+                                color: Color(0x08000000),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFBF5EB),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: const Color(0xFFEDE2D0)),
+                                ),
+                                child: const Icon(
+                                  Icons.stars_rounded,
+                                  color: Color(0xFFC88A35),
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      'Start Your Gold Kitty',
+                                      style: GoogleFonts.playfairDisplay(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF1C2420),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Accumulate 24K gold with 1-month bonus from Swastik.',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11,
+                                        color: const Color(0xFF7D786F),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () => context.go(RoutePaths.offers),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    gradient: const LinearGradient(
+                                      colors: <Color>[Color(0xFF053826), Color(0xFF03281B)],
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Join Plan',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
                       const SizedBox(height: 18),
 

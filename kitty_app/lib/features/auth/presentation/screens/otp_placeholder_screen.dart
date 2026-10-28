@@ -24,8 +24,8 @@ class OtpPlaceholderScreen extends ConsumerWidget {
           // Provision JWT token into session state
           await ref.read(appAuthStateProvider.notifier).setAuthenticated(
                 token: 'mock_jwt_test_token_phase_2',
-                userName: 'Rihan',
-                userPhone: '+91 98765 43210',
+                userName: 'Patron',
+                userPhone: '+91 90000 00000',
               );
           if (context.mounted) {
             await context.push(RoutePaths.authSuccess);

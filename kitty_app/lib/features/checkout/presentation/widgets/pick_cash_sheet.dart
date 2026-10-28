@@ -131,7 +131,7 @@ class _PickCashSheetState extends ConsumerState<PickCashSheet> {
   bool _isSuccess = false;
   String? _errorMessage;
   CashPickupRequest? _completedRequest;
-  String _generatedOtp = '4821';
+  String _generatedOtp = '----';
 
   @override
   void initState() {
@@ -139,12 +139,19 @@ class _PickCashSheetState extends ConsumerState<PickCashSheet> {
     _selectedSlot = _slots.first;
 
     final AppAuthState auth = ref.read(appAuthStateProvider);
-    _nameController = TextEditingController(text: auth.userName.isNotEmpty ? auth.userName : 'Rihan Saifi');
-    _phoneController = TextEditingController(text: auth.userPhone.isNotEmpty ? auth.userPhone : '+91 98765 43210');
-    _emailController = TextEditingController(text: 'rihan.saifi@swastikgold.in');
-    _addressController = TextEditingController();
-    _cityController = TextEditingController(text: 'New Delhi');
-    _pincodeController = TextEditingController(text: '110001');
+    final String cleanName = (auth.userName.isNotEmpty && auth.userName != 'Patron' && auth.userName != 'Rihan') ? auth.userName : '';
+    final String cleanPhone = auth.userPhone.isNotEmpty ? auth.userPhone : '';
+    final String cleanEmail = (auth.userEmail.isNotEmpty && auth.userEmail != 'rihan@swastikjewel.com') ? auth.userEmail : '';
+    final String cleanAddress = auth.address.isNotEmpty ? auth.address : '';
+    final String cleanCity = auth.city.isNotEmpty ? auth.city : '';
+    final String cleanPincode = auth.pincode.isNotEmpty ? auth.pincode : '';
+
+    _nameController = TextEditingController(text: cleanName);
+    _phoneController = TextEditingController(text: cleanPhone);
+    _emailController = TextEditingController(text: cleanEmail);
+    _addressController = TextEditingController(text: cleanAddress);
+    _cityController = TextEditingController(text: cleanCity);
+    _pincodeController = TextEditingController(text: cleanPincode);
     _notesController = TextEditingController();
   }
 
