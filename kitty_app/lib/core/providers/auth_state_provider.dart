@@ -486,6 +486,14 @@ class AppAuthNotifier extends Notifier<AppAuthState> {
     } catch (_) {}
   }
 
+  /// Updates the patron's verified phone number.
+  Future<void> updatePhone(String phone) async {
+    await updateProfile(
+      userName: state.userName,
+      userPhone: phone.trim(),
+    );
+  }
+
   /// Marks KYC as complete and finishes user onboarding.
   Future<void> completeKyc() async {
     state = state.copyWith(

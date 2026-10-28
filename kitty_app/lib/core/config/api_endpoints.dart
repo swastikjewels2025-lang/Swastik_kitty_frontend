@@ -14,6 +14,15 @@ abstract final class ApiEndpoints {
   /// Verify 6-digit OTP and obtain 30-day JWT.
   static const String authVerifyOtp = '$apiVersion/auth/verify-otp';
 
+  /// Exchange Google OAuth credentials for JWT session.
+  static const String authGoogle = '$apiVersion/auth/google';
+
+  /// Exchange Apple Identity Token for JWT session.
+  static const String authApple = '$apiVersion/auth/apple';
+
+  /// Link verified Indian phone number to active social account.
+  static const String authLinkPhone = '$apiVersion/auth/link-phone';
+
   /// Invalidate server session and logout.
   static const String authLogout = '$apiVersion/auth/logout';
 

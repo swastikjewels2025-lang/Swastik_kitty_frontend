@@ -93,6 +93,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   bool _isToastError = false;
   bool _isToastVisible = false;
 
+  bool _isAppleSubmitting = false;
+  bool _isGoogleSubmitting = false;
+
   static const List<Map<String, String>> _countryOptions = <Map<String, String>>[
     <String, String>{'code': '+91', 'flag': '🇮🇳', 'name': 'India (+91)'},
     <String, String>{'code': '+971', 'flag': '🇦🇪', 'name': 'UAE (+971)'},
@@ -101,6 +104,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     <String, String>{'code': '+65', 'flag': '🇸🇬', 'name': 'Singapore (+65)'},
     <String, String>{'code': '+61', 'flag': '🇦🇺', 'name': 'Australia (+61)'},
   ];
+
+  static const String _appleSvg = '''
+<svg viewBox="0 0 170 170" fill="#FFFFFF">
+  <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.69-7.85-12.01-14.42-6.19-9.39-11.05-20.08-14.58-32.06-3.53-11.98-5.3-23.27-5.3-33.87 0-15.12 3.86-27.42 11.59-36.9 7.73-9.48 17.51-14.32 29.35-14.54 4.57 0 9.87 1.15 15.91 3.44 6.04 2.29 10.27 3.52 12.69 3.69 1.74 0 5.86-1.31 12.37-3.92 6.51-2.61 12.03-3.76 16.57-3.44 14.59.76 25.59 5.87 33.01 15.34-12.94 7.84-19.29 18.7-19.06 32.58.22 10.66 4.3 19.58 12.24 26.76 4.02 3.69 8.59 6.42 13.7 8.18-3.05 8.92-6.75 17.62-11.11 26.11zM119.22 33.15c0-7.72 2.77-15.01 8.31-21.87 5.54-6.86 12.45-10.99 20.73-12.38.22 1.3.33 2.5.33 3.59 0 7.61-2.93 15-8.8 22.18-5.87 7.18-12.99 11.26-21.36 12.24-.22-1.09-.33-2.18-.33-3.26z"/>
+</svg>''';
 
   static const String _googleSvg = '''
 <svg viewBox="0 0 24 24">
@@ -407,21 +415,61 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   // ===========================================================================
-  // GOOGLE AUTHENTICATION (Requirement 7 & 9)
+  // GOOGLE & APPLE AUTHENTICATION (Requirements 7, 8 & 9)
   // ===========================================================================
   Future<void> _handleGoogleSignIn() async {
-    final AuthController controller = ref.read(authControllerProvider.notifier);
-    final bool success = await controller.loginWithGoogle();
-    if (success && mounted) {
-      final AppAuthState appAuth = ref.read(appAuthStateProvider);
-      if (!appAuth.isOnboarded || !appAuth.isKycVerified) {
-        await context.push(RoutePaths.profile);
-      } else {
-        context.go(RoutePaths.offers);
+    if (_isGoogleSubmitting || _isAppleSubmitting) return;
+    setState(() {
+      _isGoogleSubmitting = true;
+    });
+    try {
+      final AuthController controller = ref.read(authControllerProvider.notifier);
+      final bool success = await controller.loginWithGoogle();
+      if (success && mounted) {
+        final AppAuthState appAuth = ref.read(appAuthStateProvider);
+        if (!appAuth.isOnboarded || !appAuth.isKycVerified) {
+          await context.push(RoutePaths.profile);
+        } else {
+          context.go(RoutePaths.offers);
+        }
+      } else if (mounted) {
+        final String? err = ref.read(authControllerProvider).phoneError;
+        _showToast(err ?? 'Google sign-in was not completed.', isError: true);
       }
-    } else if (mounted) {
-      final String? err = ref.read(authControllerProvider).phoneError;
-      _showToast(err ?? 'Google sign-in was not completed.', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleSubmitting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    if (_isAppleSubmitting || _isGoogleSubmitting) return;
+    setState(() {
+      _isAppleSubmitting = true;
+    });
+    try {
+      final AuthController controller = ref.read(authControllerProvider.notifier);
+      final bool success = await controller.loginWithApple();
+      if (success && mounted) {
+        final AppAuthState appAuth = ref.read(appAuthStateProvider);
+        if (!appAuth.isOnboarded || !appAuth.isKycVerified) {
+          await context.push(RoutePaths.profile);
+        } else {
+          context.go(RoutePaths.offers);
+        }
+      } else if (mounted) {
+        final String? err = ref.read(authControllerProvider).phoneError;
+        _showToast(err ?? 'Apple sign-in was not completed.', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAppleSubmitting = false;
+        });
+      }
     }
   }
 
@@ -824,7 +872,88 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // 1. Google Authentication Button (.btn-google)
+        // 1. Apple Authentication Button (.btn-apple)
+        Container(
+          height: buttonHeight,
+          decoration: BoxDecoration(
+            color: const Color(0xFF000000),
+            border: Border.all(
+              color: const Color(0x33C88A35),
+              width: 1.0,
+            ),
+            borderRadius: BorderRadius.circular(14.0),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x1F000000),
+                blurRadius: 10,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: (_isAppleSubmitting || _isGoogleSubmitting || authState.isSubmitting)
+                  ? null
+                  : _handleAppleSignIn,
+              borderRadius: BorderRadius.circular(14.0),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _isAppleSubmitting
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Connecting with Apple...',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: SvgPicture.string(_appleSvg),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Continue with Apple',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // 2. Google Authentication Button (.btn-google)
         Container(
           height: buttonHeight,
           decoration: BoxDecoration(
@@ -845,14 +974,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: authState.isSubmitting ? null : _handleGoogleSignIn,
+              onTap: (_isAppleSubmitting || _isGoogleSubmitting || authState.isSubmitting)
+                  ? null
+                  : _handleGoogleSignIn,
               borderRadius: BorderRadius.circular(14.0),
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14.0),
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: authState.isSubmitting
+                    child: _isGoogleSubmitting
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[

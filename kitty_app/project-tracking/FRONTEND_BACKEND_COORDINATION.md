@@ -24,6 +24,9 @@ This document tracks all API contracts, shared dependencies, authentication spec
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `/auth/send-otp` | `POST` | `{"phone": "+91XXXXXXXXXX"}` | `{"phone", "expiresInSeconds", "isExistingUser", "userName"}` | No | ✅ Verified Live |
 | `/auth/verify-otp` | `POST` | `{"phone": "+91XXXXXXXXXX", "otp": "XXXXXX"}` | `{"token", "isNewUser", "user": {...}}` | No | ✅ Verified Live |
+| `/auth/google` | `POST` | `{"idToken", "email", "name", "phone"}` | `{"token", "isNewUser", "requiresPhoneVerification", "user": {...}}` | No | 🔄 Implementation Ready |
+| `/auth/apple` | `POST` | `{"identityToken", "userIdentifier", "email", "name"}` | `{"token", "isNewUser", "requiresPhoneVerification", "user": {...}}` | No | 🔄 Implementation Ready |
+| `/auth/link-phone` | `POST` | `{"phone", "otp"}` | `{"user": {...}}` | Yes | 🔄 Implementation Ready |
 | `/auth/logout` | `POST` | `{}` | `{"message": "Logged out successfully."}` | Yes | ✅ Integrated |
 
 ### 2. User Profile & Registration (`/api/v1/users`)
