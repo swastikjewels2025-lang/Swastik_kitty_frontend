@@ -25,7 +25,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>GIDClientID</key>
-	<string>765239841285-swastikjewels.apps.googleusercontent.com</string>
+	<string>720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -33,7 +33,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.765239841285-swastikjewels</string>
+				<string>com.googleusercontent.apps.720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf</string>
 			</array>
 		</dict>
 	</array>

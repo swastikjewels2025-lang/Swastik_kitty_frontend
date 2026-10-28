@@ -20,13 +20,17 @@ This document tracks all API contracts, shared dependencies, authentication spec
 
 ### 1. Authentication (`/api/v1/auth`)
 
+* **Google iOS Client ID:** `720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com`
+* **Google iOS Reversed Scheme:** `com.googleusercontent.apps.720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf`
+* **Apple Auth:** Native iOS `AuthenticationServices` framework via Swift Package Manager (No CocoaPods).
+
 | Endpoint | Method | Request Payload | Response Data | Auth Req | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `/auth/send-otp` | `POST` | `{"phone": "+91XXXXXXXXXX"}` | `{"phone", "expiresInSeconds", "isExistingUser", "userName"}` | No | ✅ Verified Live |
 | `/auth/verify-otp` | `POST` | `{"phone": "+91XXXXXXXXXX", "otp": "XXXXXX"}` | `{"token", "isNewUser", "user": {...}}` | No | ✅ Verified Live |
-| `/auth/google` | `POST` | `{"idToken", "email", "name", "phone"}` | `{"token", "isNewUser", "requiresPhoneVerification", "user": {...}}` | No | 🔄 Implementation Ready |
-| `/auth/apple` | `POST` | `{"identityToken", "userIdentifier", "email", "name"}` | `{"token", "isNewUser", "requiresPhoneVerification", "user": {...}}` | No | 🔄 Implementation Ready |
-| `/auth/link-phone` | `POST` | `{"phone", "otp"}` | `{"user": {...}}` | Yes | 🔄 Implementation Ready |
+| `/auth/google` | `POST` | `{"idToken", "email", "name", "phone"}` | `{"token", "isNewUser", "requiresPhoneVerification", "user": {...}}` | No | ✅ Integrated & Tested |
+| `/auth/apple` | `POST` | `{"identityToken", "userIdentifier", "email", "name"}` | `{"token", "isNewUser", "requiresPhoneVerification", "user": {...}}` | No | ✅ Integrated & Tested |
+| `/auth/link-phone` | `POST` | `{"phone", "otp"}` | `{"user": {...}}` | Yes | ✅ Integrated & Tested |
 | `/auth/logout` | `POST` | `{}` | `{"message": "Logged out successfully."}` | Yes | ✅ Integrated |
 
 ### 2. User Profile & Registration (`/api/v1/users`)

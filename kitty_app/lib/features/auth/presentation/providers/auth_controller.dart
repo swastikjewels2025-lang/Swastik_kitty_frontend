@@ -335,7 +335,7 @@ class AuthController extends Notifier<AuthFlowState> {
 
       try {
         final GoogleSignIn googleSignIn = GoogleSignIn(
-          clientId: '765239841285-swastikjewels.apps.googleusercontent.com',
+          clientId: '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com',
           scopes: <String>['email', 'profile'],
         );
         final GoogleSignInAccount? account = await googleSignIn.signIn();
