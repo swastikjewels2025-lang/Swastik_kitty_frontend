@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/config/api_endpoints.dart';
 import '../../../../core/enums/app_enums.dart';
 import '../../../../core/errors/app_exception.dart';
@@ -430,18 +430,16 @@ class AuthController extends Notifier<AuthFlowState> {
       String? name;
 
       try {
-        final AuthorizationCredentialAppleID credential =
-            await SignInWithApple.getAppleIDCredential(
-          scopes: <AppleIDAuthorizationScopes>[
-            AppleIDAuthorizationScopes.email,
-            AppleIDAuthorizationScopes.fullName,
-          ],
-        );
-        identityToken = credential.identityToken;
-        userIdentifier = credential.userIdentifier;
-        email = credential.email;
-        if (credential.givenName != null || credential.familyName != null) {
-          name = '${credential.givenName ?? ""} ${credential.familyName ?? ""}'.trim();
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+          const MethodChannel appleAuthChannel = MethodChannel('com.swastikjewel.kitty/apple_auth');
+          final Map<dynamic, dynamic>? nativeData =
+              await appleAuthChannel.invokeMapMethod<dynamic, dynamic>('signInWithApple');
+          if (nativeData != null) {
+            identityToken = nativeData['identityToken']?.toString();
+            userIdentifier = nativeData['userIdentifier']?.toString();
+            email = nativeData['email']?.toString();
+            name = nativeData['name']?.toString();
+          }
         }
       } catch (nativeError) {
         debugPrint('[AppleSignIn] Native dialog unconfigured/cancelled: $nativeError');
