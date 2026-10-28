@@ -416,6 +416,8 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                     child: Center(
                       child: Text(
                         _isScheduled ? 'Cash Pickup Confirmed' : 'Doorstep Cash Pickup',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -485,13 +487,17 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                     children: <Widget>[
                       Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 22),
                       SizedBox(width: 8),
-                      Text(
-                        'No Active Gold Plan Enrolled',
-                        style: TextStyle(
-                          fontFamily: 'Plus Jakarta Sans',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF991B1B),
+                      Expanded(
+                        child: Text(
+                          'No Active Gold Plan Enrolled',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Plus Jakarta Sans',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF991B1B),
+                          ),
                         ),
                       ),
                     ],
@@ -556,6 +562,7 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: _selectedMembershipId ?? activeSchemes.first.membershipId,
                     items: activeSchemes.map((s) {
                       final String tokenLabel = s.chitToken?.isNotEmpty == true ? ' (${s.chitToken})' : '';
@@ -564,6 +571,7 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                         value: s.membershipId,
                         child: Text(
                           '${s.schemeName}$tokenLabel - ₹$emi/mo',
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Plus Jakarta Sans',
                             fontSize: 13,
@@ -626,49 +634,56 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF063B2C),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              '💵',
-                              style: TextStyle(fontSize: 20),
+                    Expanded(
+                      child: Row(
+                        children: <Widget>[
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF063B2C),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            const Text(
-                              'PAYMENT FOR',
-                              style: TextStyle(
-                                fontFamily: 'Plus Jakarta Sans',
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFFA8A29E),
-                                letterSpacing: 0.5,
+                            child: const Center(
+                              child: Text(
+                                '💵',
+                                style: TextStyle(fontSize: 20),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              planDisplayName,
-                              style: GoogleFonts.playfairDisplay(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1C1917),
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const Text(
+                                  'PAYMENT FOR',
+                                  style: TextStyle(
+                                    fontFamily: 'Plus Jakarta Sans',
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFFA8A29E),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  planDisplayName,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1C1917),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: <Widget>[
@@ -700,27 +715,39 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.check_circle_rounded, color: Color(0xFF187A64), size: 15),
-                        SizedBox(width: 4),
-                        Text(
-                          'Free Doorstep Collection',
-                          style: TextStyle(
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF187A64),
+                    Expanded(
+                      child: Row(
+                        children: <Widget>[
+                          Icon(Icons.check_circle_rounded, color: Color(0xFF187A64), size: 15),
+                          SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Free Doorstep Collection',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF187A64),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Text(
-                      'Verified Store Agent',
-                      style: TextStyle(
-                        fontFamily: 'Plus Jakarta Sans',
-                        fontSize: 11,
-                        color: Color(0xFFA8A29E),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Verified Store Agent',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontFamily: 'Plus Jakarta Sans',
+                          fontSize: 11,
+                          color: Color(0xFFA8A29E),
+                        ),
                       ),
                     ),
                   ],
@@ -835,20 +862,24 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF063B2C)),
                               )
                             : const Icon(Icons.my_location_rounded, size: 16, color: Color(0xFF063B2C)),
-                        label: Text(
-                          _isDetectingLocation ? 'Locating...' : 'Fetch GPS',
-                          style: const TextStyle(
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF063B2C),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _isDetectingLocation ? 'Locating...' : 'Fetch GPS',
+                            maxLines: 1,
+                            style: const TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF063B2C),
+                            ),
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Color(0xFF063B2C)),
                           backgroundColor: const Color(0xFFE6F4F0).withValues(alpha: 0.5),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         ),
                       ),
                     ),
@@ -857,20 +888,24 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                       child: OutlinedButton.icon(
                         onPressed: _openGoogleMaps,
                         icon: const Icon(Icons.map_rounded, size: 16, color: Color(0xFFC88A35)),
-                        label: const Text(
-                          'Google Maps',
-                          style: TextStyle(
-                            fontFamily: 'Plus Jakarta Sans',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFC88A35),
+                        label: const FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Google Maps',
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFC88A35),
+                            ),
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Color(0xFFC88A35)),
                           backgroundColor: const Color(0xFFFAF5EC),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         ),
                       ),
                     ),
@@ -1281,13 +1316,18 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                       color: Color(0xFFA8A29E),
                     ),
                   ),
-                  Text(
-                    'REQ #$_generatedRequestId',
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF57534E),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'REQ #$_generatedRequestId',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF57534E),
+                      ),
                     ),
                   ),
                 ],
@@ -1304,6 +1344,7 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                       color: Color(0xFF78716C),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     '₹${_amountController.text}',
                     style: const TextStyle(
@@ -1327,13 +1368,19 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
                       color: Color(0xFF78716C),
                     ),
                   ),
-                  Text(
-                    '$_selectedDate • ${_selectedTimeSlot.split("(")[0].trim()}',
-                    style: const TextStyle(
-                      fontFamily: 'Plus Jakarta Sans',
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1C1917),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '$_selectedDate • ${_selectedTimeSlot.split("(")[0].trim()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        fontFamily: 'Plus Jakarta Sans',
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1C1917),
+                      ),
                     ),
                   ),
                 ],
@@ -1448,17 +1495,24 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Plus Jakarta Sans',
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: Color(0xFF78716C),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Plus Jakarta Sans',
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: Color(0xFF78716C),
+                  ),
                 ),
               ),
-              ?action,
+              if (action != null) ...<Widget>[
+                const SizedBox(width: 8),
+                action,
+              ],
             ],
           ),
           const SizedBox(height: 10),
@@ -1531,7 +1585,7 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF063B2C) : const Color(0xFFFAF7F2),
             borderRadius: BorderRadius.circular(12),
@@ -1540,13 +1594,17 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
             ),
           ),
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 12.5,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? Colors.white : const Color(0xFF44403C),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 12.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? Colors.white : const Color(0xFF44403C),
+              ),
             ),
           ),
         ),
@@ -1575,15 +1633,20 @@ class _CashPickupScreenState extends ConsumerState<CashPickupScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text(
-              slot,
-              style: TextStyle(
-                fontFamily: 'Plus Jakarta Sans',
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: const Color(0xFF1C1917),
+            Expanded(
+              child: Text(
+                slot,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontSize: 12.5,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: const Color(0xFF1C1917),
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
