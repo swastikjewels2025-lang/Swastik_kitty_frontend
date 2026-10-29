@@ -15,6 +15,8 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
         <!-- Common local development LAN IP subnet -->
+        <domain includeSubdomains="true">192.168.29.76</domain>
+        <domain includeSubdomains="true">192.168.29.80</domain>
         <domain includeSubdomains="true">192.168.29.46</domain>
         <domain includeSubdomains="true">192.168.29.42</domain>
     </domain-config>
