@@ -403,6 +403,7 @@ class HomeScreen extends ConsumerWidget {
                                     chitToken: activeKitty.chitToken ?? '',
                                     monthFor: activeKitty.nextInstallment?.month ?? 1,
                                     amount: installmentAmount,
+                                    planTitle: activeKitty.schemeName ?? 'Gold Kitty Plan',
                                   ),
                                 );
                               } else {
@@ -748,6 +749,7 @@ class HomeScreen extends ConsumerWidget {
                                           chitToken: activeKitty.chitToken ?? '',
                                           monthFor: activeKitty.nextInstallment?.month ?? 1,
                                           amount: installmentAmount,
+                                          planTitle: activeKitty.schemeName ?? 'Gold Kitty Plan',
                                         ),
                                       );
                                     },

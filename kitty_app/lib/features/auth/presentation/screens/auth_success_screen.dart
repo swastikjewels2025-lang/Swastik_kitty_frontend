@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routing/route_paths.dart';
@@ -18,17 +19,21 @@ import '../../../../core/routing/route_paths.dart';
 class AuthSuccessScreen extends ConsumerWidget {
   const AuthSuccessScreen({
     super.key,
-    this.planTitle = '6 Month Gold Plan',
+    this.planTitle = 'Gold Kitty Plan',
     this.amount = '₹5,000',
-    this.nextDueDate = '5 Oct 2026',
+    this.nextDueDate,
   });
 
   final String planTitle;
   final String amount;
-  final String nextDueDate;
+  final String? nextDueDate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final String effectiveDueDate = (nextDueDate != null && nextDueDate!.isNotEmpty)
+        ? nextDueDate!
+        : DateFormat('d MMM yyyy').format(DateTime.now().add(const Duration(days: 30)));
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAF7F2),
       body: SafeArea(
@@ -241,7 +246,7 @@ class AuthSuccessScreen extends ConsumerWidget {
 
                           // Breakdown Rows
                           _buildBreakdownRow('Plan', planTitle),
-                          _buildBreakdownRow('Next Installment', nextDueDate),
+                          _buildBreakdownRow('Next Installment', effectiveDueDate),
                           _buildBreakdownRow('Installment Amount', amount),
                         ],
                       ),

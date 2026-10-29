@@ -17,12 +17,16 @@ class CheckoutArgs {
     required this.chitToken,
     required this.monthFor,
     required this.amount,
+    this.planTitle,
+    this.slotsCount,
   });
 
   final String membershipId;
   final String chitToken;
   final int monthFor;
   final int amount;
+  final String? planTitle;
+  final int? slotsCount;
 }
 
 /// Recreated 100% identically from dddd/payment.html
@@ -140,9 +144,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   color: const Color(0xFF1C1917),
                 ),
               ),
-              const Text(
-                '11 Month Gold Plan (SJG00123)',
-                style: TextStyle(
+              Text(
+                '${widget.args?.planTitle ?? "Gold Kitty Plan"} (${widget.args?.chitToken ?? widget.args?.membershipId ?? "SJG00123"})',
+                style: const TextStyle(
                   fontFamily: 'Plus Jakarta Sans',
                   fontSize: 11.5,
                   color: Color(0xFF78716C),
@@ -292,12 +296,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       _isProcessing = true;
     });
 
+    final PaymentState paymentState = ref.read(paymentControllerProvider);
+    final int amount = widget.args?.amount ?? paymentState.amount;
+    final String formattedAmount = '₹${NumberFormat('#,##,###').format(amount)}';
+    final DateTime nextDate = DateTime.now().add(const Duration(days: 30));
+    final String nextDueDate = DateFormat('d MMM yyyy').format(nextDate);
+    final String planTitle = widget.args?.planTitle ?? 'Gold Kitty Plan';
+
     Future<void>.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() {
           _isProcessing = false;
         });
-        context.go(RoutePaths.authSuccess);
+        context.go(
+          RoutePaths.authSuccess,
+          extra: <String, dynamic>{
+            'planTitle': planTitle,
+            'amount': formattedAmount,
+            'nextDueDate': nextDueDate,
+          },
+        );
       }
     });
   }
@@ -429,7 +447,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
-                                        '11 Month Gold Plan',
+                                        widget.args?.planTitle ?? 'Gold Kitty Plan',
                                         style: GoogleFonts.playfairDisplay(
                                           fontSize: 17,
                                           fontWeight: FontWeight.w700,
@@ -491,10 +509,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                       ),
                                     ],
                                   ),
-                                  const Column(
+                                  Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: <Widget>[
-                                      Text(
+                                      const Text(
                                         'Due Date',
                                         style: TextStyle(
                                           fontFamily: 'Plus Jakarta Sans',
@@ -503,10 +521,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                           color: Color(0xFFA8A29E),
                                         ),
                                       ),
-                                      SizedBox(height: 2),
+                                      const SizedBox(height: 2),
                                       Text(
-                                        '5 Oct 2026',
-                                        style: TextStyle(
+                                        DateFormat('d MMM yyyy').format(DateTime.now().add(const Duration(days: 30))),
+                                        style: const TextStyle(
                                           fontFamily: 'Plus Jakarta Sans',
                                           fontSize: 14.5,
                                           fontWeight: FontWeight.w600,

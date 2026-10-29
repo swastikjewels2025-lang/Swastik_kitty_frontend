@@ -73,6 +73,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 chitToken: scheme?.chitToken ?? '',
                 monthFor: (scheme?.monthsPaid ?? 0) + 1,
                 amount: emiAmount,
+                planTitle: planTitle,
               ),
             );
           },

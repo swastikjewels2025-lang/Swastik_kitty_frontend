@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../features/auth/presentation/screens/auth_success_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_choice_screen.dart';
@@ -175,9 +176,19 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         path: RoutePaths.authSuccess,
         name: AppRoute.authSuccess.name,
         pageBuilder: (BuildContext context, GoRouterState state) {
+          final Map<String, dynamic>? extra = state.extra as Map<String, dynamic>?;
+          final String planTitle = extra?['planTitle'] as String? ?? 'Gold Kitty Plan';
+          final String amount = extra?['amount'] as String? ?? '₹5,000';
+          final String nextDueDate = extra?['nextDueDate'] as String? ??
+              DateFormat('d MMM yyyy').format(DateTime.now().add(const Duration(days: 30)));
+
           return RouteTransitions.fadeTransitionPage(
             key: state.pageKey,
-            child: const AuthSuccessScreen(),
+            child: AuthSuccessScreen(
+              planTitle: planTitle,
+              amount: amount,
+              nextDueDate: nextDueDate,
+            ),
           );
         },
       ),

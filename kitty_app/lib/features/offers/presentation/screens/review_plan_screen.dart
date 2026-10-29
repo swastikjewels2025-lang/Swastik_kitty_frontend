@@ -107,35 +107,42 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
               ),
               const SizedBox(height: 16),
               if (offers.isNotEmpty)
-                ...offers.map((s) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _buildPlanOption(
-                    title: s.name,
-                    monthly: s.monthlyInstallment,
-                    total: s.targetAmount,
-                    duration: s.durationMonths,
-                    isSelected: _scheme?.id == s.id || _durationMonths == s.durationMonths,
-                    onSelect: () {
-                      setState(() {
-                        _scheme = s;
-                        _planTitle = s.name;
-                        _monthlyAmount = s.monthlyInstallment;
-                        _totalAmount = s.targetAmount;
-                        _durationMonths = s.durationMonths;
-                      });
-                      Navigator.of(ctx).pop();
-                    },
-                  ),
-                ))
+                ...offers.map((s) {
+                  final bool isSelected = (_scheme != null && _scheme!.id.isNotEmpty)
+                      ? _scheme!.id == s.id
+                      : (_planTitle.toLowerCase().trim() == s.name.toLowerCase().trim());
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _buildPlanOption(
+                      title: s.name,
+                      monthly: s.monthlyInstallment,
+                      total: s.targetAmount,
+                      duration: s.durationMonths,
+                      isSelected: isSelected,
+                      onSelect: () {
+                        setState(() {
+                          _scheme = s;
+                          _planTitle = s.name;
+                          _monthlyAmount = s.monthlyInstallment;
+                          _totalAmount = s.targetAmount;
+                          _durationMonths = s.durationMonths;
+                        });
+                        Navigator.of(ctx).pop();
+                      },
+                    ),
+                  );
+                })
               else ...<Widget>[
                 _buildPlanOption(
                   title: '6 Month Gold Plan',
                   monthly: 5000,
                   total: 30000,
                   duration: 6,
-                  isSelected: _durationMonths == 6,
+                  isSelected: _durationMonths == 6 && _planTitle == '6 Month Gold Plan',
                   onSelect: () {
                     setState(() {
+                      _scheme = null;
                       _planTitle = '6 Month Gold Plan';
                       _monthlyAmount = 5000;
                       _totalAmount = 30000;
@@ -150,9 +157,10 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
                   monthly: 5000,
                   total: 55000,
                   duration: 11,
-                  isSelected: _durationMonths == 11,
+                  isSelected: _durationMonths == 11 && _planTitle == '11 Month Gold Plan',
                   onSelect: () {
                     setState(() {
+                      _scheme = null;
                       _planTitle = '11 Month Gold Plan';
                       _monthlyAmount = 5000;
                       _totalAmount = 55000;
@@ -298,6 +306,8 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
           chitToken: chitToken,
           monthFor: 1,
           amount: effectiveMonthly,
+          planTitle: _planTitle,
+          slotsCount: _selectedSlots.length,
         ),
       );
     } catch (e) {
