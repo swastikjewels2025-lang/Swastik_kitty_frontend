@@ -339,7 +339,6 @@ class AuthController extends Notifier<AuthFlowState> {
           clientId: !kIsWeb && io.Platform.isIOS
               ? '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com'
               : null,
-          serverClientId: '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com',
           scopes: <String>['email', 'profile'],
         );
         final GoogleSignInAccount? account = await googleSignIn.signIn();
