@@ -338,13 +338,14 @@ class AuthController extends Notifier<AuthFlowState> {
         final GoogleSignIn googleSignIn = GoogleSignIn(
           clientId: !kIsWeb && io.Platform.isIOS
               ? '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com'
-              : null,
+              : '720641978952-2c31je38tqirdv39jqlnkr567pkbfg12.apps.googleusercontent.com',
+          serverClientId: '720641978952-2c31je38tqirdv39jqlnkr567pkbfg12.apps.googleusercontent.com',
           scopes: <String>['email', 'profile'],
         );
         final GoogleSignInAccount? account = await googleSignIn.signIn();
         if (account != null) {
           final GoogleSignInAuthentication auth = await account.authentication;
-          idToken = auth.idToken;
+          idToken = auth.idToken ?? auth.accessToken;
           email = account.email;
           name = account.displayName;
           googleId = account.id;
