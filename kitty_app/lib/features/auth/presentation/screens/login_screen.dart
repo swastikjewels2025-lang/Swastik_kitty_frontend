@@ -211,6 +211,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _handleContinueWithMobile() {
     ref.read(authControllerProvider.notifier).clearErrors();
+    if (ref.read(appAuthStateProvider).isAuthenticated &&
+        !ref.read(appAuthStateProvider).isOnboarded) {
+      ref.read(appAuthStateProvider.notifier).logout();
+    }
     try {
       final GoRouter? router = GoRouter.maybeOf(context);
       if (router != null) {

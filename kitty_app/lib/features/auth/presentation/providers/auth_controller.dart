@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -335,7 +336,10 @@ class AuthController extends Notifier<AuthFlowState> {
 
       try {
         final GoogleSignIn googleSignIn = GoogleSignIn(
-          clientId: '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com',
+          clientId: !kIsWeb && io.Platform.isIOS
+              ? '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com'
+              : null,
+          serverClientId: '720641978952-amt2equ03qkeodsk7pnrct862rbnvtuf.apps.googleusercontent.com',
           scopes: <String>['email', 'profile'],
         );
         final GoogleSignInAccount? account = await googleSignIn.signIn();
@@ -348,6 +352,9 @@ class AuthController extends Notifier<AuthFlowState> {
         }
       } catch (nativeError) {
         debugPrint('[GoogleSignIn] Native dialog unconfigured/cancelled: $nativeError');
+        state = state.copyWith(
+          phoneError: 'Google sign-in was not completed ($nativeError)',
+        );
       }
 
       if (idToken == null) {

@@ -81,16 +81,28 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
         return RoutePaths.login;
       }
 
-      // 4. Authenticated User: Route according to statutory KYC status
+      // 4. Authenticated User: Route according to onboarding & statutory KYC status
       if (auth.isAuthenticated) {
-        if (location == RoutePaths.authSuccess ||
-            location == RoutePaths.profile ||
-            location == RoutePaths.postKycChoice ||
-            (!auth.isOnboarded && location == RoutePaths.login)) {
-          return null; // Allow welcome / biometric post-auth step, profile registration, choice screen, or login step 4 profile completion
+        // A. Pre-Onboarding Guard: User must complete User Details & Nominee first
+        if (!auth.isOnboarded) {
+          // Allow all authentication and registration screens so user can complete profile or re-authenticate
+          if (isAuthRoute ||
+              location == RoutePaths.authSuccess ||
+              location == RoutePaths.profile) {
+            return null;
+          }
+          // Redirect attempts to access main app or KYC directly to profile registration
+          return RoutePaths.profile;
         }
 
-        // Statutory KYC Guard: If KYC is not completed and user has not chosen to skip for now, redirect to KYC screen
+        // B. Onboarded user: Allow welcome / biometric post-auth step or choice screen
+        if (location == RoutePaths.authSuccess ||
+            location == RoutePaths.profile ||
+            location == RoutePaths.postKycChoice) {
+          return null;
+        }
+
+        // C. Statutory KYC Guard: Only enforce KYC after User Details & Nominee are complete
         if (!auth.isKycVerified && !auth.hasSkippedKyc) {
           if (location == RoutePaths.kyc) {
             return null; // Allow KYC screen
@@ -98,7 +110,7 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
           return RoutePaths.kyc; // Enforce KYC verification
         }
 
-        // Verified User: Redirect auth routes to Gold Plans (new landing page)
+        // D. Verified & Onboarded User: Redirect public auth routes to Gold Plans
         if (isAuthRoute) {
           return RoutePaths.offers;
         }
