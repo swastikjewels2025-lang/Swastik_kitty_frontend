@@ -9,14 +9,11 @@
 const bool kUseProductionServer = true;
 
 /// ----------------------------------------------------------------------------
-/// 1. Production Hostinger VPS / Domain Configuration
+/// 1. Production Hostinger VPS Domain Configuration
 /// ----------------------------------------------------------------------------
-/// Your Hostinger VPS IP: 187.127.142.29
-/// If using IP directly without SSL yet: keep kUseHttps = false.
-/// Once you point a domain (e.g. 'api.swastikjewel.com') and install SSL:
-/// change kProductionHost to your domain and set kUseHttps = true.
-const String kProductionHost = '187.127.142.29';
-const bool kUseHttps = false; // Switch to true when SSL (https://) is configured
+/// Swastik Kitty Production Subdomain:
+const String kProductionHost = 'kitty.swastikjewel.in';
+const bool kUseHttps = true; // Enabled with Let's Encrypt SSL
 
 /// ----------------------------------------------------------------------------
 /// 2. Local Development Configuration (Wi-Fi LAN)
