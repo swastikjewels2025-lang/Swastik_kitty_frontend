@@ -217,6 +217,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final String planId = scheme?.membershipId?.isNotEmpty == true
         ? scheme!.membershipId!
         : (scheme?.chitToken ?? '');
+    final String chitToken = scheme?.chitToken ?? '';
 
     final String startDate = scheme?.startDate != null
         ? DateFormat('d MMM yyyy').format(scheme!.startDate!)
@@ -330,10 +331,78 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 const SizedBox(height: 16),
               ],
 
+              // Multi-Plan Selector (if patron has 2 or more active plans)
+              if (state.schemes.length > 1) ...<Widget>[
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: List<Widget>.generate(state.schemes.length, (int index) {
+                        final DashboardSummaryEntity s = state.schemes[index];
+                        final bool isSelected = index == state.selectedSchemeIndex;
+                        final String sToken = s.chitToken ?? 'Token #${index + 1}';
+                        final String sName = s.schemeName ?? 'Plan ${index + 1}';
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: InkWell(
+                            onTap: () => controller.selectScheme(index),
+                            borderRadius: BorderRadius.circular(12),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color(0xFF063B2C) : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? const Color(0xFF063B2C) : const Color(0xFFE5DDD0),
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                                boxShadow: isSelected
+                                    ? const <BoxShadow>[
+                                        BoxShadow(
+                                          color: Color(0x1F063B2C),
+                                          blurRadius: 6,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    size: 15,
+                                    color: isSelected ? const Color(0xFFEAB308) : Colors.transparent,
+                                  ),
+                                  if (isSelected) const SizedBox(width: 6),
+                                  Text(
+                                    '$sName ($sToken)',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                      color: isSelected ? Colors.white : const Color(0xFF101915),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
               // 1. TOP MAIN PLAN CARD (scheme.html line 123)
               _buildTopPlanCard(
                 planTitle: planTitle,
                 planId: planId,
+                chitToken: chitToken,
                 progressPercent: progressPercent,
                 paidAmount: paidAmount,
                 targetAmount: targetAmount,
@@ -350,6 +419,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 endDate: endDate,
                 monthlyAmountStr: monthlyAmountStr,
                 targetAmount: targetAmount,
+                chitToken: chitToken,
               ),
 
               const SizedBox(height: 16),
@@ -389,6 +459,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required String monthlyAmountStr,
     required String nextDueDate,
     required VoidCallback onPayNow,
+    String chitToken = '',
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -463,14 +534,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Plan ID: $planId',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: _textMuted,
-                            ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: <Widget>[
+                              if (chitToken.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF063B2C),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      const Icon(
+                                        Icons.confirmation_number_rounded,
+                                        size: 11,
+                                        color: Color(0xFFEAB308),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Token: $chitToken',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              Text(
+                                'Plan ID: ${planId.length > 8 ? '${planId.substring(0, 8)}...' : planId}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _textMuted,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -664,6 +769,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required String endDate,
     required String monthlyAmountStr,
     required String targetAmount,
+    String chitToken = '',
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -692,6 +798,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 14),
+
+          if (chitToken.isNotEmpty) ...<Widget>[
+            _buildDetailRow(
+              icon: Icons.confirmation_number_outlined,
+              label: 'Chit Token Number',
+              value: chitToken,
+            ),
+            const Divider(color: Color(0xFFF4EFE7), height: 16),
+          ],
 
           _buildDetailRow(
             icon: Icons.calendar_today_rounded,
