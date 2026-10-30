@@ -36,6 +36,11 @@ jobs:
           cd kitty_app
           flutter build apk --release
 
+      - name: Verify APK Signing Certificate
+        run: |
+          echo "=== APK Certificate Details ==="
+          keytool -printcert -jarfile kitty_app/build/app/outputs/flutter-apk/app-release.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:

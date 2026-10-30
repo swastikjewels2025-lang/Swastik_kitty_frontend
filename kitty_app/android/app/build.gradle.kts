@@ -33,22 +33,16 @@ android {
 
     signingConfigs {
         create("release") {
-            if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
-                storePassword = keystoreProperties.getProperty("storePassword")
-            }
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "swastikkey"
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: "swastik123"
+            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) } ?: file("swastik-release.jks")
+            storePassword = keystoreProperties.getProperty("storePassword") ?: "swastik123"
         }
     }
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

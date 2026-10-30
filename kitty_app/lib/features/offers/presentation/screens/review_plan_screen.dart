@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -281,15 +282,25 @@ class _ReviewPlanScreenState extends ConsumerState<ReviewPlanScreen> {
           }
         }
       } catch (err) {
-        // If already enrolled in this scheme, fetch existing active dashboard
-        final dashRes = await dio.get<Map<String, dynamic>>('/api/v1/memberships/my-dashboard');
-        final dashData = dashRes.data?['data']?['dashboard'] as Map<String, dynamic>?;
-        if (dashData != null) {
-          membershipId = dashData['membershipId']?.toString() ?? '';
-          if (_selectedSlots.length == 1) {
-            chitToken = dashData['chitToken']?.toString() ?? chitToken;
+        debugPrint('[Enrollment] Failed to enroll: $err');
+        String errMsg = 'Unable to enroll in scheme. Please select another slot.';
+        if (err is DioException && err.response?.data is Map) {
+          final Map resp = err.response!.data as Map;
+          if (resp['message'] != null) {
+            errMsg = resp['message'].toString();
           }
         }
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errMsg),
+              backgroundColor: const Color(0xFFB45309),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
       }
 
       // 2. Refresh controllers so purchased plan shows in My Plan / Home instantly

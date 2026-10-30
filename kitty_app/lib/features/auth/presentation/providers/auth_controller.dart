@@ -351,8 +351,15 @@ class AuthController extends Notifier<AuthFlowState> {
         }
       } catch (nativeError) {
         debugPrint('[GoogleSignIn] Native dialog unconfigured/cancelled: $nativeError');
+        final String errStr = nativeError.toString();
+        String friendlyError = 'Google sign-in was not completed ($nativeError)';
+        if (errStr.contains(': 10') || errStr.contains('DEVELOPER_ERROR')) {
+          friendlyError = 'Google Sign-In Error (Code 10): Ensure Google Console package name is "com.swastikjewel.kittyapp" (no dot) and SHA-1 matches.';
+        } else if (errStr.contains('12501') || errStr.contains('canceled') || errStr.contains('cancelled')) {
+          friendlyError = 'Google sign-in cancelled.';
+        }
         state = state.copyWith(
-          phoneError: 'Google sign-in was not completed ($nativeError)',
+          phoneError: friendlyError,
         );
       }
 

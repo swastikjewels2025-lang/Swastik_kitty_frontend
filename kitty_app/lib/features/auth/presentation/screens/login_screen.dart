@@ -876,86 +876,87 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        // 1. Apple Authentication Button (.btn-apple)
-        Container(
-          height: buttonHeight,
-          decoration: BoxDecoration(
-            color: const Color(0xFF000000),
-            border: Border.all(
-              color: const Color(0x33C88A35),
-              width: 1.0,
-            ),
-            borderRadius: BorderRadius.circular(14.0),
-            boxShadow: const <BoxShadow>[
-              BoxShadow(
-                color: Color(0x1F000000),
-                blurRadius: 10,
-                offset: Offset(0, 2),
+        // 1. Apple Authentication Button (.btn-apple) - strictly on iOS devices
+        if (defaultTargetPlatform == TargetPlatform.iOS) ...<Widget>[
+          Container(
+            height: buttonHeight,
+            decoration: BoxDecoration(
+              color: const Color(0xFF000000),
+              border: Border.all(
+                color: const Color(0x33C88A35),
+                width: 1.0,
               ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: (_isAppleSubmitting || _isGoogleSubmitting || authState.isSubmitting)
-                  ? null
-                  : _handleAppleSignIn,
               borderRadius: BorderRadius.circular(14.0),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: _isAppleSubmitting
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: Color(0x1F000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: (_isAppleSubmitting || _isGoogleSubmitting || authState.isSubmitting)
+                    ? null
+                    : _handleAppleSignIn,
+                borderRadius: BorderRadius.circular(14.0),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: _isAppleSubmitting
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Connecting with Apple...',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Connecting with Apple...',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: SvgPicture.string(_appleSvg),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Continue with Apple',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                              ],
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: SvgPicture.string(_appleSvg),
                                 ),
-                              ),
-                            ],
-                          ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Continue with Apple',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-
-        const SizedBox(height: 12),
+          const SizedBox(height: 12),
+        ],
 
         // 2. Google Authentication Button (.btn-google)
         Container(
