@@ -1,8 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/providers/core_providers.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../checkout/domain/entities/payment_order_entity.dart';
 import '../../domain/gateway_result.dart';
@@ -12,7 +16,7 @@ import '../../domain/gateway_result.dart';
 /// Presents order details received from backend payment initiation and allows
 /// exercising all gateway outcomes (Completed, Declined, Cancelled, Pending)
 /// to thoroughly test client-side polling and reconciliation logic.
-class GokwikGatewayScreen extends StatelessWidget {
+class GokwikGatewayScreen extends ConsumerWidget {
   const GokwikGatewayScreen({
     super.key,
     this.order,
@@ -21,7 +25,7 @@ class GokwikGatewayScreen extends StatelessWidget {
   final PaymentOrderEntity? order;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final PaymentOrderEntity activeOrder = order ??
         const PaymentOrderEntity(
           orderId: 'gokwik_ord_771829',
@@ -173,10 +177,27 @@ class GokwikGatewayScreen extends StatelessWidget {
               // Action 1: Complete Payment (Primary Success)
               ElevatedButton(
                 key: const Key('gokwik_simulate_success_btn'),
-                onPressed: () {
-                  context.pop(const GatewayResult.completed(
-                    message: 'Simulated payment completed on GoKwik.',
-                  ));
+                onPressed: () async {
+                  try {
+                    final DioClient dio = ref.read(dioClientProvider);
+                    await dio.post<Map<String, dynamic>>(
+                      '/api/v1/payments/webhook',
+                      data: <String, dynamic>{
+                        'orderId': activeOrder.orderId,
+                        'status': 'SUCCESS',
+                        'transactionId': 'TXN-SW-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+                      },
+                      options: Options(headers: <String, dynamic>{
+                        'x-gokwik-signature': 'test_signature',
+                      }),
+                    );
+                  } catch (_) {}
+
+                  if (context.mounted) {
+                    context.pop(const GatewayResult.completed(
+                      message: 'Simulated payment completed on GoKwik.',
+                    ));
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryEmerald,
@@ -207,10 +228,26 @@ class GokwikGatewayScreen extends StatelessWidget {
               // Action 2: Bank Decline
               OutlinedButton(
                 key: const Key('gokwik_simulate_fail_btn'),
-                onPressed: () {
-                  context.pop(const GatewayResult.failed(
-                    message: 'Bank declined transaction (insufficient funds or authorization timeout).',
-                  ));
+                onPressed: () async {
+                  try {
+                    final DioClient dio = ref.read(dioClientProvider);
+                    await dio.post<Map<String, dynamic>>(
+                      '/api/v1/payments/webhook',
+                      data: <String, dynamic>{
+                        'orderId': activeOrder.orderId,
+                        'status': 'FAILED',
+                      },
+                      options: Options(headers: <String, dynamic>{
+                        'x-gokwik-signature': 'test_signature',
+                      }),
+                    );
+                  } catch (_) {}
+
+                  if (context.mounted) {
+                    context.pop(const GatewayResult.failed(
+                      message: 'Bank declined transaction (insufficient funds or authorization timeout).',
+                    ));
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFDC2626),
